@@ -1,0 +1,596 @@
+﻿<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boussole & Goals — Orientez vos voyages et réalisez vos objectifs</title>
+    <meta name="description" content="Plateforme universelle de géolocalisation repérable, recherche de médecins d'urgence, hôtels et appartements meublés.">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Leaflet CSS & JS pour la Carte Interactive ESRI -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Manifeste PWA -->
+    <link rel="manifest" href="data:application/manifest+json,{
+      %22name%22:%22Boussole%20%26%20Goals%22,
+      %22short_name%22:%22BoussoleGoals%22,
+      %22start_url%22:%22.%22,
+      %22display%22:%22standalone%22,
+      %22background_color%22:%22%230f172a%22,
+      %22theme_color%22:%22%232563eb%22,
+      %22icons%22:[{%22src%22:%22https://cdn-icons-png.flaticon.com/512/854/854878.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]
+    }">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Cairo:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Google Sans', 'Cairo', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+        }
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(51, 65, 85, 0.9);
+        }
+
+        @keyframes compassRotate {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(15deg); }
+            50% { transform: rotate(-10deg); }
+            75% { transform: rotate(5deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .animate-compass { animation: compassRotate 6s ease-in-out infinite; }
+
+        #map { height: 360px; width: 100%; border-radius: 1rem; z-index: 1; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- BARRE DE NAVIGATION SUPÉRIEURE -->
+    <nav class="sticky top-0 z-50 backdrop-blur-md bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <!-- Logo -->
+                <a href="#" class="flex items-center space-x-3 group">
+                    <div class="relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform">
+                        <i data-lucide="compass" class="w-7 h-7 animate-compass"></i>
+                    </div>
+                    <span class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                        Boussole & <span class="text-brand-600 dark:text-brand-400">Goals</span>
+                    </span>
+                </a>
+
+                <!-- Navigation -->
+                <div class="hidden xl:flex space-x-6 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                    <a href="#accueil" class="hover:text-brand-600 transition">Accueil</a>
+                    <a href="#urgences" class="text-red-600 font-bold hover:text-red-700 transition">🚨 Urgences</a>
+                    <a href="#geolocalisation" class="hover:text-brand-600 transition">📍 Ma Position & Carte</a>
+                    <a href="#location-sites" class="hover:text-brand-600 transition">🏠 Appartements</a>
+                    <a href="#hotels" class="hover:text-brand-600 transition">🏨 Hôtels</a>
+                    <a href="#sejour-ideal" class="hover:text-brand-600 transition">🗓️ Plan Idéal</a>
+                </div>
+
+                <!-- Actions Utilitaires -->
+                <div class="flex items-center space-x-3">
+                    <select id="languageSelect" onchange="changeLanguage(this.value)" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold px-2.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 outline-none cursor-pointer">
+                        <option value="fr">🇫🇷 FR</option>
+                        <option value="en">🇬🇧 EN</option>
+                        <option value="ar">🇹🇳 العربية</option>
+                    </select>
+
+                    <button id="installPwaBtn" onclick="installApp()" class="hidden sm:inline-flex items-center gap-1 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 rounded-xl border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-200 transition">
+                        <i data-lucide="download" class="w-4 h-4"></i> Installer
+                    </button>
+
+                    <button onclick="toggleAuthModal()" class="px-3.5 py-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow transition flex items-center gap-1">
+                        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Compte
+                    </button>
+
+                    <button id="themeToggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition">
+                        <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
+                        <i data-lucide="sun" class="w-5 h-5 block dark:hidden"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 📢 ESPACE PUBLICITAIRE HAUT (GOOGLE ADSENSE / PARTENAIRES) -->
+    <div class="max-w-6xl mx-auto px-4 mt-6">
+        <div class="bg-slate-200/70 dark:bg-slate-800/70 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 text-center text-xs text-slate-500 uppercase tracking-wider">
+            <span>📢 Espace Publicitaire Haut (Google AdSense Banner)</span>
+            <!-- Remplacez le texte ci-dessus par votre balise script AdSense lorsque vous l'aurez validé -->
+        </div>
+    </div>
+
+    <!-- SECTION ACCUEIL & PRÉSENTATION -->
+    <section id="accueil" class="py-12 bg-gradient-to-b from-blue-50/50 dark:from-slate-900/50 to-transparent border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-12 gap-12 items-center">
+                
+                <div class="lg:col-span-7 text-center lg:text-left space-y-6">
+                    <span class="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 rounded-full">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Navigation Repérable & Services Intelligents
+                    </span>
+                    
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+                        Orientez vos déplacements, trouvez l'urgence, réalisez vos <span class="text-brand-600">Goals</span>
+                    </h1>
+                    
+                    <p class="text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                        Plateforme universelle conçue pour vous guider en temps réel. Accédez instantanément à votre position GPS précise, aux médecins de garde, aux hôtels et aux plateformes de location meublée de votre région.
+                    </p>
+                    
+                    <div class="flex flex-wrap justify-center lg:justify-start gap-3 pt-2">
+                        <button onclick="getLocateUser()" class="px-6 py-3.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-lg transition flex items-center gap-2">
+                            <i data-lucide="locate" class="w-4 h-4"></i> Activer ma position
+                        </button>
+                        <a href="#urgences" class="px-6 py-3.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg transition flex items-center gap-2">
+                            <i data-lucide="ambulance" class="w-4 h-4"></i> Urgences Médicales
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Boussole Visuelle -->
+                <div class="lg:col-span-5 flex justify-center">
+                    <div class="relative w-72 h-72 rounded-full glass-card flex items-center justify-center shadow-2xl border p-6">
+                        <span class="absolute top-4 font-bold text-slate-400 text-xs">N</span>
+                        <span class="absolute bottom-4 font-bold text-slate-400 text-xs">S</span>
+                        <span class="absolute right-4 font-bold text-slate-400 text-xs">E</span>
+                        <span class="absolute left-4 font-bold text-slate-400 text-xs">W</span>
+                        <div class="w-36 h-36 rounded-full bg-gradient-to-tr from-brand-600 to-emerald-500 flex items-center justify-center text-white shadow-xl animate-compass">
+                            <i data-lucide="compass" class="w-20 h-20"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 1 : URGENCES MÉDICALES -->
+    <section id="urgences" class="py-12 bg-red-50/60 dark:bg-red-950/20 border-b border-red-200 dark:border-red-900/50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-8">
+                <span class="text-red-600 font-bold text-xs uppercase tracking-wider">Sécurité & Santé</span>
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">🚨 Secours & Médecins d'Urgence</h2>
+                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Un clic pour localiser immédiatement les services médicaux de garde autour de vous.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-5">
+                <button onclick="searchDirectCategory('Médecin d urgence de garde')" class="p-5 rounded-2xl bg-white dark:bg-slate-800 border-2 border-red-500 hover:bg-red-600 hover:text-white transition group shadow-md text-left flex items-center gap-4">
+                    <div class="p-3 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 rounded-xl group-hover:bg-white group-hover:text-red-600 transition">
+                        <i data-lucide="stethoscope" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">Médecin de Garde</h3>
+                        <p class="text-xs text-slate-500 group-hover:text-red-100">Consultation et urgence</p>
+                    </div>
+                </button>
+
+                <button onclick="searchDirectCategory('Clinique urgence hôpital')" class="p-5 rounded-2xl bg-white dark:bg-slate-800 border-2 border-red-500 hover:bg-red-600 hover:text-white transition group shadow-md text-left flex items-center gap-4">
+                    <div class="p-3 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 rounded-xl group-hover:bg-white group-hover:text-red-600 transition">
+                        <i data-lucide="hospital" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">Cliniques & Hôpitaux</h3>
+                        <p class="text-xs text-slate-500 group-hover:text-red-100">Urgences 24h/24</p>
+                    </div>
+                </button>
+
+                <button onclick="searchDirectCategory('Pharmacie de garde')" class="p-5 rounded-2xl bg-white dark:bg-slate-800 border-2 border-red-500 hover:bg-red-600 hover:text-white transition group shadow-md text-left flex items-center gap-4">
+                    <div class="p-3 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 rounded-xl group-hover:bg-white group-hover:text-red-600 transition">
+                        <i data-lucide="pill" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">Pharmacie de Garde</h3>
+                        <p class="text-xs text-slate-500 group-hover:text-red-100">Médicaments et secours</p>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2 : GÉOLOCALISATION & CARTE -->
+    <section id="geolocalisation" class="py-12 bg-white dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-8">
+                <span class="text-brand-600 font-bold text-xs uppercase tracking-wider">Repérage GPS</span>
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">📍 Votre Position & Carte Interactive</h2>
+            </div>
+
+            <!-- Statut GPS -->
+            <div class="glass-card rounded-2xl p-5 shadow-md mb-6 text-center" id="locationStatus">
+                <div class="flex items-center justify-center gap-2 text-slate-600 dark:text-slate-300 text-sm font-medium">
+                    <i data-lucide="radar" class="w-5 h-5 text-brand-600 animate-spin"></i>
+                    <span>Acquisition des coordonnées GPS en cours...</span>
+                </div>
+            </div>
+
+            <!-- Carte -->
+            <div class="glass-card p-4 rounded-3xl shadow-xl mb-8">
+                <div id="map"></div>
+            </div>
+
+            <!-- Barre de Recherche & Filtres Rapides -->
+            <div class="glass-card rounded-2xl p-6 shadow-lg space-y-4">
+                <label for="searchQuery" class="block text-sm font-bold text-slate-700 dark:text-slate-300">
+                    🔍 Rechercher un service à proximité :
+                </label>
+                <div class="flex gap-2">
+                    <input type="text" id="searchQuery" placeholder="Ex: Restaurant, Banque, Station-service, Supermarché..." 
+                           class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-brand-500">
+                    <button onclick="searchNearby()" class="px-6 py-3 font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow transition text-sm">
+                        Rechercher
+                    </button>
+                </div>
+
+                <div class="pt-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Filtres Rapides :</span>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="setQuery('Médecin d urgence de garde')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white transition">🚨 Urgence</button>
+                        <button onclick="setQuery('Pharmacie de garde')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white transition">💊 Pharmacie</button>
+                        <button onclick="setQuery('Café')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white transition">☕ Café</button>
+                        <button onclick="setQuery('Restaurant')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white transition">🍽️ Restaurant</button>
+                        <button onclick="setQuery('Station service')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white transition">⛽ Station-Service</button>
+                        <button onclick="setQuery('Supermarché')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white transition">🛒 Supermarché</button>
+                        <button onclick="setQuery('Banque ATM')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white transition">🏦 Distributeur ATM</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 📢 ESPACE PUBLICITAIRE MILIEU (IN-FEED ADSENSE) -->
+    <div class="max-w-5xl mx-auto px-4 my-8">
+        <div class="bg-slate-200/70 dark:bg-slate-800/70 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 text-center text-xs text-slate-500 uppercase tracking-wider">
+            <span>📢 Annonce Partenaire / Offres Immobilières & Voyage</span>
+        </div>
+    </div>
+
+    <!-- SECTION 3 : APPARTEMENTS MEUBLÉS PAR PAYS -->
+    <section id="location-sites" class="py-12 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-8">
+                <span class="text-brand-600 font-bold text-xs uppercase tracking-wider">Immobilier & Logement</span>
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">🏠 Appartements Meublés par Pays & Région</h2>
+                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Sélectionnez votre zone géographique pour accéder directement aux plateformes d'annonces de référence.</p>
+            </div>
+
+            <div class="max-w-md mx-auto mb-8">
+                <select id="countryFilter" onchange="filterRealEstateSites(this.value)" class="w-full py-3 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-sm shadow-sm outline-none focus:ring-2 focus:ring-brand-500">
+                    <option value="tn">🇹🇳 Tunisie (Tayara, Mubawab, Tunisie-Annonce)</option>
+                    <option value="fr">🇫🇷 France (Leboncoin, SeLoger, PAP)</option>
+                    <option value="ma">🇲🇦 Maroc (Avito, Mubawab.ma)</option>
+                    <option value="global">🌍 International (Airbnb, Booking.com, Vrbo)</option>
+                </select>
+            </div>
+
+            <div id="sitesGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </div>
+    </section>
+
+    <!-- SECTION 4 : HÔTELS & HÉBERGEMENTS -->
+    <section id="hotels" class="py-12 bg-white dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-8">
+                <span class="text-brand-600 font-bold text-xs uppercase tracking-wider">Hébergement & Séjour</span>
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">🏨 Hôtels & Résidences Recommandés</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between">
+                    <div>
+                        <i data-lucide="hotel" class="w-8 h-8 text-brand-600 mb-3"></i>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Hôtels & Resorts</h3>
+                        <p class="text-xs text-slate-500 mb-4">Pour un séjour tout confort avec services hôteliers.</p>
+                    </div>
+                    <button onclick="searchDirectCategory('Hôtel 4 étoiles 5 étoiles')" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition">
+                        Rechercher les Hôtels
+                    </button>
+                </div>
+
+                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between">
+                    <div>
+                        <i data-lucide="home" class="w-8 h-8 text-emerald-600 mb-3"></i>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Maison d'Hôtes & BNB</h3>
+                        <p class="text-xs text-slate-500 mb-4">Expérience authentique et chaleureuse.</p>
+                    </div>
+                    <button onclick="searchDirectCategory('Maison d hôtes BNB')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition">
+                        Rechercher Maisons d'Hôtes
+                    </button>
+                </div>
+
+                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between">
+                    <div>
+                        <i data-lucide="building-2" class="w-8 h-8 text-amber-600 mb-3"></i>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Appart-Hôtels</h3>
+                        <p class="text-xs text-slate-500 mb-4">Idéal pour l'autonomie et les séjours longs.</p>
+                    </div>
+                    <button onclick="searchDirectCategory('Appartement meublé location saisonnière')" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition">
+                        Rechercher Appart-Hôtels
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 5 : PLAN DE SÉJOUR IDÉAL INTERACTIF -->
+    <section id="sejour-ideal" class="py-12 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-10">
+                <span class="text-brand-600 font-bold text-xs uppercase tracking-wider">Organisation Stratégique</span>
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">🗓️ Plan de Séjour Idéal Interactif</h2>
+                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Suivez ces 4 étapes clés et cliquez sur les actions pour exécuter votre plan à proximité.</p>
+            </div>
+
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between shadow-sm hover:border-brand-500 transition">
+                    <div>
+                        <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-brand-100 text-brand-700 mb-3">Étape 1</span>
+                        <h4 class="font-bold text-base text-slate-900 dark:text-white mb-2">Analyse du Périmètre</h4>
+                        <p class="text-xs text-slate-500 mb-4">Repérez les services vitaux (pharmacies, banques, transports) dans un rayon de 2 km.</p>
+                    </div>
+                    <button onclick="searchDirectCategory('Pharmacie banque distributeur ATM')" class="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition">
+                        🔍 Analyser le Périmètre
+                    </button>
+                </div>
+
+                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between shadow-sm hover:border-brand-500 transition">
+                    <div>
+                        <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-700 mb-3">Étape 2</span>
+                        <h4 class="font-bold text-base text-slate-900 dark:text-white mb-2">Choix du Logement</h4>
+                        <p class="text-xs text-slate-500 mb-4">Sélectionnez votre hôtel ou appartement meublé idéal autour de vous.</p>
+                    </div>
+                    <button onclick="searchDirectCategory('Hôtel appartement meublé')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition">
+                        🏨 Trouver un Logement
+                    </button>
+                </div>
+
+                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between shadow-sm hover:border-brand-500 transition">
+                    <div>
+                        <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-700 mb-3">Étape 3</span>
+                        <h4 class="font-bold text-base text-slate-900 dark:text-white mb-2">Restauration & Sorties</h4>
+                        <p class="text-xs text-slate-500 mb-4">Planifiez vos repas, cafés et découvertes touristiques ou d'affaires.</p>
+                    </div>
+                    <button onclick="searchDirectCategory('Restaurant café supermarché')" class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition">
+                        🍽️ Explorer les Sorties
+                    </button>
+                </div>
+
+                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between shadow-sm hover:border-red-500 transition">
+                    <div>
+                        <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-red-100 text-red-700 mb-3">Étape 4</span>
+                        <h4 class="font-bold text-base text-slate-900 dark:text-white mb-2">Sécurité & Urgences</h4>
+                        <p class="text-xs text-slate-500 mb-4">Localisez instantanément les services de santé et d'urgence médicale.</p>
+                    </div>
+                    <button onclick="searchDirectCategory('Médecin d urgence clinique')" class="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition">
+                        🚨 Contacts Urgence
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODALE COMPTE / INSCRIPTION -->
+    <div id="authModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl relative">
+            <button onclick="toggleAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-2 text-center">S'inscrire à Boussole & Goals</h3>
+            <p class="text-xs text-slate-500 text-center mb-6">Sauvegardez vos emplacements et préférences de voyage.</p>
+            <form onsubmit="handleAuth(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Nom complet</label>
+                    <input type="text" required placeholder="Votre nom" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Email</label>
+                    <input type="email" required placeholder="nom@domaine.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Mot de passe</label>
+                    <input type="password" required placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm outline-none">
+                </div>
+                <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow transition text-sm">Valider l'inscription</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800 text-center text-xs">
+        <div class="max-w-7xl mx-auto px-4 space-y-3">
+            <p>&copy; 2026 Boussole & Goals. Tous droits réservés. | 
+               <a href="privacy.html" class="text-blue-400 hover:text-blue-300 underline transition">Politique de Confidentialité</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        lucide.createIcons();
+
+        let userLatitude = 36.8065;
+        let userLongitude = 10.1815;
+        let map, userMarker;
+        let deferredPrompt;
+
+        function setQuery(val) {
+            document.getElementById('searchQuery').value = val;
+        }
+
+        // --- CARTE ESRI GRATUITE ---
+        function initMap(lat, lng) {
+            if (!map) {
+                map = L.map('map').setView([lat, lng], 14);
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    attribution: 'Tiles &copy; Esri'
+                }).addTo(map);
+
+                userMarker = L.marker([lat, lng]).addTo(map)
+                    .bindPopup("<b>Votre position repérable !</b><br>Lat: " + lat.toFixed(5) + " | Lng: " + lng.toFixed(5)).openPopup();
+            } else {
+                map.setView([lat, lng], 14);
+                userMarker.setLatLng([lat, lng])
+                    .bindPopup("<b>Position mise à jour !</b><br>Lat: " + lat.toFixed(5) + " | Lng: " + lng.toFixed(5)).openPopup();
+            }
+        }
+
+        function getLocateUser() {
+            const geoSection = document.getElementById('geolocalisation');
+            if (geoSection) { geoSection.scrollIntoView({ behavior: 'smooth' }); }
+
+            const statusBox = document.getElementById('locationStatus');
+            if (!navigator.geolocation) {
+                statusBox.innerHTML = "<span class='text-red-500'>⚠️ La géolocalisation n'est pas supportée.</span>";
+                return;
+            }
+
+            statusBox.innerHTML = "<span class='text-brand-600 font-bold'>⏳ Acquisition des coordonnées GPS repérables...</span>";
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    userLatitude = pos.coords.latitude;
+                    userLongitude = pos.coords.longitude;
+                    statusBox.innerHTML = `
+                        <div class="text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+                            ✅ <strong>Coordonnées Repérables Détectées !</strong><br>
+                            <span class="text-xs text-slate-600 dark:text-slate-300">Latitude : ${userLatitude.toFixed(5)} | Longitude : ${userLongitude.toFixed(5)}</span>
+                        </div>`;
+                    initMap(userLatitude, userLongitude);
+                },
+                (err) => {
+                    statusBox.innerHTML = `<span class='text-amber-600 font-semibold'>⚠️ GPS non accessible : ${err.message}. Position par défaut activée.</span>`;
+                    initMap(userLatitude, userLongitude);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+
+        function searchNearby() {
+            const query = document.getElementById('searchQuery').value.trim();
+            if (!query) { alert("Veuillez saisir un terme de recherche."); return; }
+            window.open(`https://www.google.com/maps/search/${encodeURIComponent(query)}/@${userLatitude},${userLongitude},15z`, '_blank');
+        }
+
+        function searchDirectCategory(category) {
+            window.open(`https://www.google.com/maps/search/${encodeURIComponent(category)}/@${userLatitude},${userLongitude},15z`, '_blank');
+        }
+
+        const realEstateSites = {
+            tn: [
+                { name: "Tayara.tn", desc: "1er site de petites annonces et location d'appartements en Tunisie.", url: "https://www.tayara.tn/c/immobilier/locations/appartements" },
+                { name: "Mubawab.tn", desc: "Portail spécialisé en immobilier et appartements meublés en Tunisie.", url: "https://www.mubawab.tn/" },
+                { name: "Tunisie-Annonce", desc: "Annonces directes de particuliers et agences.", url: "http://www.tunisie-annonce.com/" }
+            ],
+            fr: [
+                { name: "Leboncoin.fr", desc: "Leader des annonces de location meublée en France.", url: "https://www.leboncoin.fr/c/locations" },
+                { name: "SeLoger", desc: "Référence de l'immobilier résidentiel en France.", url: "https://www.seloger.com/" }
+            ],
+            ma: [
+                { name: "Avito.ma", desc: "Portail d'annonces de référence au Maroc.", url: "https://www.avito.ma/" },
+                { name: "Mubawab.ma", desc: "Locations meublées et appartements au Maroc.", url: "https://www.mubawab.ma/" }
+            ],
+            global: [
+                { name: "Airbnb", desc: "Réservation globale d'appartements meublés.", url: "https://www.airbnb.com/" },
+                { name: "Booking.com", desc: "Locations de vacances et appart-hôtels mondiaux.", url: "https://www.booking.com/" }
+            ]
+        };
+
+        function filterRealEstateSites(country) {
+            const grid = document.getElementById('sitesGrid');
+            grid.innerHTML = '';
+            const sites = realEstateSites[country] || realEstateSites.tn;
+
+            sites.forEach(site => {
+                grid.innerHTML += `
+                    <div class="p-5 rounded-2xl glass-card border flex flex-col justify-between hover:border-brand-500 transition shadow-sm">
+                        <div>
+                            <h4 class="font-bold text-base text-slate-900 dark:text-white mb-1">${site.name}</h4>
+                            <p class="text-xs text-slate-500 mb-4">${site.desc}</p>
+                        </div>
+                        <a href="${site.url}" target="_blank" rel="noopener noreferrer" class="w-full text-center py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition">
+                            Visiter le Site Direct 🔗
+                        </a>
+                    </div>`;
+            });
+        }
+
+        function toggleAuthModal() {
+            document.getElementById('authModal').classList.toggle('hidden');
+        }
+
+        function handleAuth(e) {
+            e.preventDefault();
+            alert("Inscription réussie sur Boussole & Goals !");
+            toggleAuthModal();
+        }
+
+        // --- INSTALLATION PWA ---
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPwaBtn').classList.remove('hidden');
+        });
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choice) => {
+                    if (choice.outcome === 'accepted') {
+                        document.getElementById('installPwaBtn').classList.add('hidden');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        window.onload = () => {
+            getLocateUser();
+            filterRealEstateSites('tn');
+        };
+    </script>
+</body>
+</html>
