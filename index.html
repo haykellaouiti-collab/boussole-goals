@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="fr" class="scroll-smooth">
+<html lang="fr" class="scroll-smooth" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boussole &amp; Goals — Géolocalisation GPS, Urgences et Guide de Séjour</title>
-    <meta name="description" content="Trouvez votre position GPS exacte, localisez les médecins d'urgence, pharmacies de garde, hôtels et appartements meublés avec la carte interactive Boussole & Goals.">
-    <meta name="keywords" content="géolocalisation, GPS, urgences, pharmacie de garde, médecin, hôtel, appartement meublé, voyage, Boussole & Goals">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title id="docTitle">Boussole & Goals — Navigation, Urgences, POI & Guide de Séjour</title>
+    <meta name="description" content="Plateforme PWA interactive de géolocalisation, boussole dynamique, numéros d'urgence par pays, carte de POI et carnet de voyage.">
+    <meta name="keywords" content="boussole GPS, urgence santé, pharmacie de garde, carte interactive, itinéraire waze, appartement meublé, hôtel, carnet de voyage">
     
-    <!-- Balise de vérification Google Search Console -->
+    <!-- Google Search Console -->
     <meta name="google-site-verification" content="HUnEyJRyYf0WJwbXhtIYoLnZprXHcPb2ltZisy7ilcA" />
 
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -19,11 +19,12 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
+                            50: '#f0f7ff',
+                            100: '#e0effe',
                             500: '#3b82f6',
                             600: '#2563eb',
                             700: '#1d4ed8',
+                            900: '#1e3a8a'
                         }
                     }
                 }
@@ -34,13 +35,13 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Leaflet CSS & JS pour la Carte Interactive ESRI -->
+    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <!-- Manifeste PWA -->
+    <!-- Manifeste PWA Embed -->
     <link rel="manifest" href="data:application/manifest+json,{
-      %22name%22:%22Boussole%20%26%20Goals%22,
+      %22name%22:%22Boussole%20%26%20Goals%20Pro%22,
       %22short_name%22:%22BoussoleGoals%22,
       %22start_url%22:%22.%22,
       %22display%22:%22standalone%22,
@@ -50,85 +51,112 @@
     }">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Cairo:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&display=swap');
 
         body {
-            font-family: 'Google Sans', 'Cairo', sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Cairo', sans-serif;
             background-color: #f8fafc;
             color: #0f172a;
-            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.94);
-            backdrop-filter: blur(14px);
-            border: 1px solid rgba(226, 232, 240, 0.9);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
         }
         .dark .glass-card {
-            background: rgba(15, 23, 42, 0.9);
-            border: 1px solid rgba(51, 65, 85, 0.9);
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(51, 65, 85, 0.8);
         }
 
-        @keyframes compassRotate {
-            0% { transform: rotate(0deg); }
-            25% { transform: rotate(15deg); }
-            50% { transform: rotate(-10deg); }
-            75% { transform: rotate(5deg); }
-            100% { transform: rotate(0deg); }
+        #map { 
+            height: 480px; 
+            width: 100%; 
+            border-radius: 1.25rem; 
+            z-index: 10; 
         }
-        .animate-compass { animation: compassRotate 6s ease-in-out infinite; }
 
-        #map { height: 360px; width: 100%; border-radius: 1rem; z-index: 1; }
+        /* Boussole Styles */
+        .compass-ring {
+            transition: transform 0.15s ease-out;
+            will-change: transform;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100,116,139,0.3);
+            border-radius: 99px;
+        }
     </style>
 
     <!-- Code Google AdSense Global -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3266873353292561"
-         crossorigin="anonymous"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3266873353292561" crossorigin="anonymous"></script>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
 
-    <!-- BARRE DE NAVIGATION SUPÉRIEURE -->
-    <nav class="sticky top-0 z-50 backdrop-blur-md bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <!-- NAVBAR SUPÉRIEURE -->
+    <nav class="sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-slate-800/80 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
                 
                 <!-- Logo -->
-                <a href="#" class="flex items-center space-x-3 group">
-                    <div class="relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform">
-                        <i data-lucide="compass" class="w-7 h-7 animate-compass"></i>
+                <a href="#" class="flex items-center space-x-3 rtl:space-x-reverse group">
+                    <div class="relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/25 group-hover:scale-105 transition-transform duration-300">
+                        <i data-lucide="compass" class="w-6 h-6 animate-spin-slow"></i>
                     </div>
-                    <span class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                        Boussole & <span class="text-brand-600 dark:text-brand-400">Goals</span>
-                    </span>
+                    <div>
+                        <span class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white block leading-none">
+                            Boussole <span class="text-brand-600 dark:text-brand-400">&</span> Goals
+                        </span>
+                        <span data-i18n="navSubtitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mt-0.5">Navigation & Sécurité GPS</span>
+                    </div>
                 </a>
 
-                <!-- Navigation -->
-                <div class="hidden xl:flex space-x-6 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                    <a href="#accueil" class="hover:text-brand-600 transition">Accueil</a>
-                    <a href="#urgences" class="text-red-600 font-bold hover:text-red-700 transition">🚨 Urgences</a>
-                    <a href="#geolocalisation" class="hover:text-brand-600 transition">📍 Ma Position & Carte</a>
-                    <a href="#location-sites" class="hover:text-brand-600 transition">🏠 Appartements</a>
-                    <a href="#hotels" class="hover:text-brand-600 transition">🏨 Hôtels</a>
-                    <a href="#sejour-ideal" class="hover:text-brand-600 transition">🗓️ Plan Idéal</a>
+                <!-- Navigation Desktop -->
+                <div class="hidden xl:flex items-center space-x-6 rtl:space-x-reverse text-sm font-semibold text-slate-600 dark:text-slate-300">
+                    <a href="#boussole-section" class="hover:text-brand-600 dark:hover:text-brand-400 transition flex items-center gap-1.5"><i data-lucide="compass" class="w-4 h-4"></i> <span data-i18n="navCap">Cap Boussole</span></a>
+                    <a href="#urgences-section" class="text-red-600 dark:text-red-400 font-bold hover:text-red-700 transition flex items-center gap-1.5"><i data-lucide="siren" class="w-4 h-4"></i> <span data-i18n="navEmergencies">Secours</span></a>
+                    <a href="#carte-section" class="hover:text-brand-600 dark:hover:text-brand-400 transition flex items-center gap-1.5"><i data-lucide="map-pin" class="w-4 h-4"></i> <span data-i18n="navMap">Carte POI</span></a>
+                    <a href="#favoris-section" class="hover:text-brand-600 dark:hover:text-brand-400 transition flex items-center gap-1.5"><i data-lucide="bookmark" class="w-4 h-4"></i> <span data-i18n="navBookmarks">Carnet</span></a>
+                    <a href="#immobilier-section" class="hover:text-brand-600 dark:hover:text-brand-400 transition flex items-center gap-1.5"><i data-lucide="building" class="w-4 h-4"></i> <span data-i18n="navHousing">Logements</span></a>
                 </div>
 
-                <!-- Actions Utilitaires -->
-                <div class="flex items-center space-x-3">
-                    <select id="languageSelect" onchange="changeLanguage(this.value)" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold px-2.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 outline-none cursor-pointer">
+                <!-- Outils et Actions -->
+                <div class="flex items-center space-x-2 sm:space-x-3 rtl:space-x-reverse">
+                    
+                    <!-- Sélecteur de Langue TRILINGUE -->
+                    <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-brand-50 dark:bg-slate-800 text-brand-700 dark:text-slate-200 text-xs font-extrabold px-2.5 py-2 rounded-xl border border-brand-200 dark:border-slate-700 outline-none cursor-pointer hover:border-brand-500 transition shadow-sm">
                         <option value="fr">🇫🇷 FR</option>
                         <option value="en">🇬🇧 EN</option>
                         <option value="ar">🇹🇳 العربية</option>
                     </select>
 
-                    <button id="installPwaBtn" onclick="installApp()" class="hidden sm:inline-flex items-center gap-1 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 rounded-xl border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-200 transition">
-                        <i data-lucide="download" class="w-4 h-4"></i> Installer
+                    <!-- Sélecteur de Pays Urgences -->
+                    <select id="countrySelect" onchange="changeCountry(this.value)" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold px-2 py-2 rounded-xl border border-slate-200 dark:border-slate-700 outline-none cursor-pointer hover:border-brand-500 transition">
+                        <option value="TN">🇹🇳 Tunisie</option>
+                        <option value="FR">🇫🇷 France</option>
+                        <option value="MA">🇲🇦 Maroc</option>
+                        <option value="DZ">🇩🇿 Algérie</option>
+                        <option value="EU">🇪🇺 Europe (112)</option>
+                        <option value="US">🇺🇸 USA / CA</option>
+                    </select>
+
+                    <!-- PWA Button -->
+                    <button id="installPwaBtn" onclick="installApp()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 rounded-xl border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-200 transition">
+                        <i data-lucide="download-cloud" class="w-4 h-4"></i> <span data-i18n="installPwa">Installer PWA</span>
                     </button>
 
-                    <button onclick="toggleAuthModal()" class="px-3.5 py-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow transition flex items-center gap-1">
-                        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Compte
-                    </button>
-
-                    <button id="themeToggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition">
+                    <!-- Theme Toggle -->
+                    <button id="themeToggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
                         <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
                         <i data-lucide="sun" class="w-5 h-5 block dark:hidden"></i>
                     </button>
@@ -137,452 +165,1039 @@
         </div>
     </nav>
 
-    <!-- 📢 ESPACE PUBLICITAIRE HAUT (GOOGLE ADSENSE) -->
-    <div class="max-w-6xl mx-auto px-4 mt-6 text-center">
+    <!-- BANNIÈRE ADSENSE SUPÉRIEURE -->
+    <div class="max-w-6xl mx-auto px-4 mt-4 text-center">
         <ins class="adsbygoogle"
              style="display:block"
              data-ad-client="ca-pub-3266873353292561"
              data-ad-slot="auto"
              data-ad-format="auto"
              data-full-width-responsive="true"></ins>
-        <script>
-             (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
-    <!-- SECTION ACCUEIL & PRÉSENTATION -->
-    <section id="accueil" class="py-12 bg-gradient-to-b from-blue-50/50 dark:from-slate-900/50 to-transparent border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid lg:grid-cols-12 gap-12 items-center">
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow space-y-12 py-6">
+
+        <!-- HERO SECTION & BOUSSOLE EN TEMPS RÉEL -->
+        <section id="boussole-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-12 gap-8 items-center">
                 
-                <div class="lg:col-span-7 text-center lg:text-left space-y-6">
-                    <span class="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 rounded-full">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Navigation Repérable & Services Intelligents
+                <!-- Infos / CTA -->
+                <div class="lg:col-span-7 space-y-6 text-center lg:text-left rtl:lg:text-right">
+                    <span class="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-brand-700 bg-brand-100 dark:bg-brand-950/80 dark:text-brand-300 rounded-full border border-brand-200 dark:border-brand-800">
+                        <span class="w-2 h-2 rounded-full bg-brand-500 animate-ping"></span>
+                        <span data-i18n="heroBadge">Cap GPS & Urgences Géolocalisées 24/7</span>
                     </span>
                     
-                    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
-                        Orientez vos déplacements, trouvez l'urgence, réalisez vos <span class="text-brand-600">Goals</span>
+                    <h1 class="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                        <span data-i18n="heroTitleStart">Votre Boussole digitale.</span> <br><span data-i18n="heroTitleMid">Vos urgences</span> <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-emerald-500" data-i18n="heroTitleEnd">à portée de main.</span>
                     </h1>
                     
-                    <p class="text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                        Plateforme universelle conçue pour vous guider en temps réel. Accédez instantanément à votre position GPS précise, aux médecins de garde, aux hôtels et aux plateformes de location meublée de votre région.
+                    <p data-i18n="heroDesc" class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                        Visualisez votre direction exacte, localisez les services médicaux de garde, trouvez des logements meublés vérifiés et enregistrez vos lieux stratégiques en temps réel.
                     </p>
-                    
-                    <div class="flex flex-wrap justify-center lg:justify-start gap-3 pt-2">
-                        <button onclick="getLocateUser()" class="px-6 py-3.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-lg transition flex items-center gap-2">
-                            <i data-lucide="locate" class="w-4 h-4"></i> Activer ma position
-                        </button>
-                        <a href="#urgences" class="px-6 py-3.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg transition flex items-center gap-2">
-                            <i data-lucide="ambulance" class="w-4 h-4"></i> Urgences Médicales
-                        </a>
-                    </div>
-                </div>
 
-                <!-- Boussole Visuelle -->
-                <div class="lg:col-span-5 flex justify-center">
-                    <div class="relative w-72 h-72 rounded-full glass-card flex items-center justify-center shadow-2xl border p-6">
-                        <span class="absolute top-4 font-bold text-slate-400 text-xs">N</span>
-                        <span class="absolute bottom-4 font-bold text-slate-400 text-xs">S</span>
-                        <span class="absolute right-4 font-bold text-slate-400 text-xs">E</span>
-                        <span class="absolute left-4 font-bold text-slate-400 text-xs">W</span>
-                        <div class="w-36 h-36 rounded-full bg-gradient-to-tr from-brand-600 to-emerald-500 flex items-center justify-center text-white shadow-xl animate-compass">
-                            <i data-lucide="compass" class="w-20 h-20"></i>
+                    <div class="flex flex-wrap items-center justify-center lg:justify-start rtl:lg:justify-end gap-3">
+                        <button onclick="getLocateUser()" class="px-5 py-3 text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-lg shadow-brand-500/20 transition flex items-center gap-2">
+                            <i data-lucide="crosshair" class="w-4 h-4"></i> <span data-i18n="btnRefreshPos">Actualiser ma position</span>
+                        </button>
+                        <a href="#urgences-section" class="px-5 py-3 text-xs sm:text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-500/20 transition flex items-center gap-2">
+                            <i data-lucide="phone-call" class="w-4 h-4"></i> <span data-i18n="btnDirectEmergencies">Urgences Directes</span>
+                        </a>
+                        <button onclick="toggleCompassModal()" class="px-5 py-3 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-200/80 dark:bg-slate-800 hover:bg-slate-300 transition flex items-center gap-2 rounded-xl">
+                            <i data-lucide="maximize" class="w-4 h-4"></i> <span data-i18n="btnFullscreenCompass">Boussole Plein Écran</span>
+                        </button>
+                    </div>
+
+                    <!-- Barre info Coordonnées GPS -->
+                    <div id="gpsDetails" class="glass-card p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 text-xs font-semibold">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="navigation-2" class="w-5 h-5 text-brand-600"></i>
+                            <span><span data-i18n="lblGps">GPS</span> : <span id="latLngTxt" class="font-mono text-slate-900 dark:text-white">Acquisition en cours...</span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="gauge" class="w-5 h-5 text-emerald-600"></i>
+                            <span><span data-i18n="lblPrecision">Précision</span> : <span id="accuracyTxt" class="font-mono text-slate-900 dark:text-white">-- m</span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="compass" class="w-5 h-5 text-indigo-600"></i>
+                            <span><span data-i18n="lblSensorHeading">Cap Capteur</span> : <span id="headingDegreeTxt" class="font-mono text-slate-900 dark:text-white">0° (N)</span></span>
                         </div>
                     </div>
                 </div>
 
-            </div>
-        </div>
-    </section>
+                <!-- Boussole Visuelle Interactive -->
+                <div class="lg:col-span-5 flex flex-col items-center justify-center">
+                    <div class="relative w-64 h-64 sm:w-80 sm:h-80 rounded-full glass-card p-6 flex items-center justify-center shadow-2xl border border-slate-200 dark:border-slate-800">
+                        
+                        <!-- Cadran Rose des Vents -->
+                        <div id="compassRing" class="compass-ring absolute inset-2 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center">
+                            <span class="absolute top-2 font-black text-red-600 text-sm" id="cardinalN">N</span>
+                            <span class="absolute right-3 font-bold text-slate-400 text-xs" id="cardinalE">E</span>
+                            <span class="absolute bottom-2 font-bold text-slate-400 text-xs" id="cardinalS">S</span>
+                            <span class="absolute left-3 font-bold text-slate-400 text-xs" id="cardinalW">O</span>
+                        </div>
 
-    <!-- SECTION 1 : URGENCES MÉDICALES -->
-    <section id="urgences" class="py-12 bg-red-50/60 dark:bg-red-950/20 border-b border-red-200 dark:border-red-900/50">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-2xl mx-auto mb-8">
-                <span class="text-red-600 font-bold text-xs uppercase tracking-wider">Sécurité & Santé</span>
-                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">🚨 Secours & Médecins d'Urgence</h2>
-                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Un clic pour localiser immédiatement les services médicaux de garde autour de vous.</p>
-            </div>
+                        <!-- Aiguille Boussole -->
+                        <div id="compassNeedle" class="compass-ring relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
+                            <div class="w-2.5 h-20 bg-gradient-to-b from-red-600 to-red-400 rounded-t-full shadow-md"></div>
+                            <div class="w-2.5 h-20 bg-gradient-to-b from-slate-400 to-slate-800 rounded-b-full shadow-md"></div>
+                            <div class="absolute w-6 h-6 rounded-full bg-white dark:bg-slate-900 border-4 border-slate-800 dark:border-white shadow-lg"></div>
+                        </div>
 
-            <div class="grid md:grid-cols-3 gap-5">
-                <button onclick="searchDirectCategory('Médecin d urgence de garde')" class="p-5 rounded-2xl bg-white dark:bg-slate-800 border-2 border-red-500 hover:bg-red-600 hover:text-white transition group shadow-md text-left flex items-center gap-4">
-                    <div class="p-3 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 rounded-xl group-hover:bg-white group-hover:text-red-600 transition">
-                        <i data-lucide="stethoscope" class="w-6 h-6"></i>
+                        <!-- Badge Angle -->
+                        <div class="absolute bottom-6 px-3 py-1 rounded-full bg-slate-900/90 text-white font-mono text-xs font-bold border border-slate-700 shadow">
+                            <span id="headingVal">0</span>°
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="font-bold text-base">Médecin de Garde</h3>
-                        <p class="text-xs text-slate-500 group-hover:text-red-100">Consultation et urgence</p>
-                    </div>
-                </button>
-
-                <button onclick="searchDirectCategory('Clinique urgence hôpital')" class="p-5 rounded-2xl bg-white dark:bg-slate-800 border-2 border-red-500 hover:bg-red-600 hover:text-white transition group shadow-md text-left flex items-center gap-4">
-                    <div class="p-3 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 rounded-xl group-hover:bg-white group-hover:text-red-600 transition">
-                        <i data-lucide="hospital" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-base">Cliniques & Hôpitaux</h3>
-                        <p class="text-xs text-slate-500 group-hover:text-red-100">Urgences 24h/24</p>
-                    </div>
-                </button>
-
-                <button onclick="searchDirectCategory('Pharmacie de garde')" class="p-5 rounded-2xl bg-white dark:bg-slate-800 border-2 border-red-500 hover:bg-red-600 hover:text-white transition group shadow-md text-left flex items-center gap-4">
-                    <div class="p-3 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 rounded-xl group-hover:bg-white group-hover:text-red-600 transition">
-                        <i data-lucide="pill" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-base">Pharmacie de Garde</h3>
-                        <p class="text-xs text-slate-500 group-hover:text-red-100">Médicaments et secours</p>
-                    </div>
-                </button>
-            </div>
-        </div>
-    </section>
-
-    <!-- SECTION 2 : GÉOLOCALISATION & CARTE -->
-    <section id="geolocalisation" class="py-12 bg-white dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-2xl mx-auto mb-8">
-                <span class="text-brand-600 font-bold text-xs uppercase tracking-wider">Repérage GPS</span>
-                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">📍 Votre Position & Carte Interactive</h2>
-            </div>
-
-            <!-- Statut GPS -->
-            <div class="glass-card rounded-2xl p-5 shadow-md mb-6 text-center" id="locationStatus">
-                <div class="flex items-center justify-center gap-2 text-slate-600 dark:text-slate-300 text-sm font-medium">
-                    <i data-lucide="radar" class="w-5 h-5 text-brand-600 animate-spin"></i>
-                    <span>Acquisition des coordonnées GPS en cours...</span>
-                </div>
-            </div>
-
-            <!-- Carte -->
-            <div class="glass-card p-4 rounded-3xl shadow-xl mb-8">
-                <div id="map"></div>
-            </div>
-
-            <!-- Barre de Recherche & Filtres Rapides -->
-            <div class="glass-card rounded-2xl p-6 shadow-lg space-y-4">
-                <label for="searchQuery" class="block text-sm font-bold text-slate-700 dark:text-slate-300">
-                    🔍 Rechercher un service à proximité :
-                </label>
-                <div class="flex gap-2">
-                    <input type="text" id="searchQuery" placeholder="Ex: Restaurant, Banque, Station-service, Supermarché..." 
-                           class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm outline-none focus:ring-2 focus:ring-brand-500">
-                    <button onclick="searchNearby()" class="px-6 py-3 font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow transition text-sm">
-                        Rechercher
+                    
+                    <!-- Bouton Autorisation Boussole iOS/Android -->
+                    <button id="orientPermissionBtn" onclick="requestOrientationPermission()" class="mt-4 px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-200 dark:bg-slate-800 rounded-xl hover:bg-slate-300 transition">
+                        🧭 <span data-i18n="btnEnableSensor">Activer le capteur de cap dynamique</span>
                     </button>
                 </div>
 
-                <div class="pt-2">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Filtres Rapides :</span>
+            </div>
+        </section>
+
+        <!-- MODULE 1 : URGENCES DIRECTES & NUMÉROS CRITIQUES -->
+        <section id="urgences-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent p-6 sm:p-8 rounded-3xl border border-red-500/20 shadow-lg">
+                
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <span data-i18n="urgencySubtitle" class="text-xs font-black text-red-600 dark:text-red-400 uppercase tracking-widest">Secours & Assistance Immédiate</span>
+                        <h2 data-i18n="urgencyTitle" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-1">🚨 Appels d'Urgence par Pays</h2>
+                    </div>
+                    <div id="currentCountryBadge" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-red-600 text-white font-bold text-xs shadow">
+                        <span>Pays : Tunisie (TN)</span>
+                    </div>
+                </div>
+
+                <!-- Grid Numéros Téléphoniques -->
+                <div id="emergencyNumbersGrid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <!-- Généré dynamiquement JS -->
+                </div>
+
+                <!-- Boutons d'Accès Rapide POI Médicaux -->
+                <div class="pt-4 border-t border-red-500/20 grid sm:grid-cols-3 gap-3">
+                    <button onclick="filterPoiCategory('pharmacy')" class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 hover:bg-red-600 hover:text-white transition flex items-center justify-between text-left rtl:text-right group">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="pill" class="w-5 h-5 text-emerald-600 group-hover:text-white"></i>
+                            <span data-i18n="btnDutyPharmacies" class="font-bold text-xs">Pharmacies de garde</span>
+                        </div>
+                        <i data-lucide="arrow-right" class="w-4 h-4 rtl:rotate-180"></i>
+                    </button>
+                    
+                    <button onclick="filterPoiCategory('hospital')" class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 hover:bg-red-600 hover:text-white transition flex items-center justify-between text-left rtl:text-right group">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="hospital" class="w-5 h-5 text-red-600 group-hover:text-white"></i>
+                            <span data-i18n="btnHospitals" class="font-bold text-xs">Hôpitaux & Cliniques</span>
+                        </div>
+                        <i data-lucide="arrow-right" class="w-4 h-4 rtl:rotate-180"></i>
+                    </button>
+
+                    <button onclick="filterPoiCategory('doctors')" class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 hover:bg-red-600 hover:text-white transition flex items-center justify-between text-left rtl:text-right group">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="stethoscope" class="w-5 h-5 text-brand-600 group-hover:text-white"></i>
+                            <span data-i18n="btnDoctors" class="font-bold text-xs">Médecins & Cabinets</span>
+                        </div>
+                        <i data-lucide="arrow-right" class="w-4 h-4 rtl:rotate-180"></i>
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- MODULE 2 : CARTE INTERACTIVE MULTI-COUCHES & DISTANCE EN TEMPS RÉEL -->
+        <section id="carte-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <span data-i18n="mapSubtitle" class="text-xs font-black text-brand-600 uppercase tracking-widest">Cartographie Avancée</span>
+                        <h2 data-i18n="mapTitle" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-1">📍 Points d'Intérêt (POI) & Distance</h2>
+                    </div>
+
+                    <!-- Filtres Couches -->
                     <div class="flex flex-wrap gap-2">
-                        <button onclick="setQuery('Médecin d urgence de garde')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white transition">🚨 Urgence</button>
-                        <button onclick="setQuery('Pharmacie de garde')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white transition">💊 Pharmacie</button>
-                        <button onclick="setQuery('Café')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white transition">☕ Café</button>
-                        <button onclick="setQuery('Restaurant')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white transition">🍽️ Restaurant</button>
-                        <button onclick="setQuery('Station service')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white transition">⛽ Station-Service</button>
-                        <button onclick="setQuery('Supermarché')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white transition">🛒 Supermarché</button>
-                        <button onclick="setQuery('Banque ATM')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white transition">🏦 Distributeur ATM</button>
+                        <button onclick="filterPoiCategory('all')" class="poi-btn active px-3 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-900 transition" data-i18n="filterAll">Tous</button>
+                        <button onclick="filterPoiCategory('pharmacy')" class="poi-btn px-3 py-2 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 hover:bg-emerald-200 transition" data-i18n="filterPharmacy">💊 Pharmacies</button>
+                        <button onclick="filterPoiCategory('hospital')" class="poi-btn px-3 py-2 rounded-xl text-xs font-bold bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 hover:bg-red-200 transition" data-i18n="filterEmergency">🚨 Urgences</button>
+                        <button onclick="filterPoiCategory('restaurant')" class="poi-btn px-3 py-2 rounded-xl text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 hover:bg-amber-200 transition" data-i18n="filterDining">🍽️ Restos/Cafés</button>
+                        <button onclick="filterPoiCategory('hotel')" class="poi-btn px-3 py-2 rounded-xl text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 hover:bg-blue-200 transition" data-i18n="filterHotels">🏨 Hôtels</button>
+                        <button onclick="filterPoiCategory('fuel')" class="poi-btn px-3 py-2 rounded-xl text-xs font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 hover:bg-purple-200 transition" data-i18n="filterServices">⛽ Stations/Banques</button>
                     </div>
                 </div>
+
+                <!-- Recherche Texte + Overpass API -->
+                <div class="flex gap-2">
+                    <div class="relative flex-grow">
+                        <i data-lucide="search" class="w-5 h-5 absolute left-3.5 rtl:right-3.5 rtl:left-auto top-3.5 text-slate-400"></i>
+                        <input type="text" id="poiSearchInput" placeholder="Rechercher une adresse ou un service..." 
+                               class="w-full pl-11 pr-4 rtl:pr-11 rtl:pl-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium outline-none focus:ring-2 focus:ring-brand-500 shadow-sm">
+                    </div>
+                    <button onclick="searchCustomAddress()" class="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-2xl shadow transition text-xs sm:text-sm">
+                        <span data-i18n="btnLocate">Localiser</span>
+                    </button>
+                </div>
+
+                <!-- CARTE LEAFLET CONTAINER -->
+                <div id="map" class="shadow-inner border border-slate-200 dark:border-slate-800"></div>
+
+                <!-- LISTE RESULTATS DYNAMIQUES AVEC CALCUL DE DISTANCE -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 data-i18n="nearbyTitle" class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Lieux & Distances Proches :</h3>
+                        <span id="resultsCount" class="text-xs font-semibold text-slate-500">0 lieu détecté</span>
+                    </div>
+                    <div id="poiList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-1">
+                        <!-- Rempli dynamiquement -->
+                    </div>
+                </div>
+
             </div>
+        </section>
+
+        <!-- BANNIÈRE ADSENSE MILIEU -->
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-3266873353292561"
+                 data-ad-slot="auto"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
         </div>
-    </section>
 
-    <!-- 📢 ESPACE PUBLICITAIRE MILIEU (GOOGLE ADSENSE) -->
-    <div class="max-w-5xl mx-auto px-4 my-8 text-center">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="ca-pub-3266873353292561"
-             data-ad-slot="auto"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
-        <script>
-             (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
-    </div>
+        <!-- MODULE 3 : CARNET DE VOYAGE ET FAVORIS (LOCALSTORAGE) -->
+        <section id="favoris-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+                
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <span data-i18n="bookmarksSubtitle" class="text-xs font-black text-emerald-600 uppercase tracking-widest">Gestion Personnalisée</span>
+                        <h2 data-i18n="bookmarksTitle" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-1">📓 Carnet de Voyage & Favoris</h2>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="exportFavorites()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5">
+                            <i data-lucide="download" class="w-4 h-4"></i> <span data-i18n="btnExport">Exporter JSON</span>
+                        </button>
+                        <button onclick="openAddBookmarkModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1.5 shadow">
+                            <i data-lucide="plus" class="w-4 h-4"></i> <span data-i18n="btnAddBookmark">Ajouter un repère</span>
+                        </button>
+                    </div>
+                </div>
 
-    <!-- SECTION 3 : APPARTEMENTS MEUBLÉS PAR PAYS -->
-    <section id="location-sites" class="py-12 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-2xl mx-auto mb-8">
-                <span class="text-brand-600 font-bold text-xs uppercase tracking-wider">Immobilier & Logement</span>
-                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">🏠 Appartements Meublés par Pays & Région</h2>
-                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Sélectionnez votre zone géographique pour accéder directement aux plateformes d'annonces de référence.</p>
+                <div id="bookmarksList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Rempli dynamiquement -->
+                </div>
+
             </div>
+        </section>
 
-            <div class="max-w-md mx-auto mb-8">
-                <select id="countryFilter" onchange="filterRealEstateSites(this.value)" class="w-full py-3 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-sm shadow-sm outline-none focus:ring-2 focus:ring-brand-500">
-                    <option value="tn">🇹🇳 Tunisie (Tayara, Mubawab, Tunisie-Annonce)</option>
-                    <option value="fr">🇫🇷 France (Leboncoin, SeLoger, PAP)</option>
-                    <option value="ma">🇲🇦 Maroc (Avito, Mubawab.ma)</option>
-                    <option value="global">🌍 International (Airbnb, Booking.com, Vrbo)</option>
-                </select>
+        <!-- MODULE 4 : APPARTEMENTS MEUBLÉS ET LOGEMENTS PAR PAYS -->
+        <section id="immobilier-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+                <div class="text-center max-w-2xl mx-auto space-y-2">
+                    <span data-i18n="housingSubtitle" class="text-xs font-black text-indigo-600 uppercase tracking-widest">Séjour & Hébergement</span>
+                    <h2 data-i18n="housingTitle" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">🏠 Plateformes de Logement Directes</h2>
+                    <p data-i18n="housingDesc" class="text-xs text-slate-500">Accédez instantanément aux plateformes d'annonces vérifiées par pays.</p>
+                </div>
+
+                <div class="max-w-xs mx-auto">
+                    <select id="housingCountrySelect" onchange="renderHousingSites(this.value)" class="w-full py-3 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold text-xs text-slate-800 dark:text-white outline-none shadow-sm">
+                        <option value="TN">🇹🇳 Tunisie (Tayara, Mubawab...)</option>
+                        <option value="FR">🇫🇷 France (Leboncoin, SeLoger...)</option>
+                        <option value="MA">🇲🇦 Maroc (Avito, Mubawab.ma...)</option>
+                        <option value="GLOBAL">🌍 International (Airbnb, Booking...)</option>
+                    </select>
+                </div>
+
+                <div id="housingGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Rempli JS -->
+                </div>
             </div>
+        </section>
 
-            <div id="sitesGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 py-10 border-t border-slate-800 text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
+            <div class="flex items-center justify-center space-x-2 rtl:space-x-reverse">
+                <div class="w-8 h-8 rounded-xl bg-brand-600 flex items-center justify-center text-white">
+                    <i data-lucide="compass" class="w-5 h-5"></i>
+                </div>
+                <span class="text-lg font-bold text-white tracking-tight">Boussole & Goals</span>
+            </div>
+            <p data-i18n="footerDesc" class="text-slate-500 max-w-lg mx-auto">
+                Application Web PWA universelle de géolocalisation, boussole dynamique et gestion d'urgences locales.
+            </p>
+            <p class="text-slate-600">&copy; 2026 Boussole & Goals Pro. <span data-i18n="footerRights">Tous droits réservés.</span></p>
         </div>
-    </section>
+    </footer>
 
-    <!-- SECTION 4 : HÔTELS & HÉBERGEMENTS -->
-    <section id="hotels" class="py-12 bg-white dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-2xl mx-auto mb-8">
-                <span class="text-brand-600 font-bold text-xs uppercase tracking-wider">Hébergement & Séjour</span>
-                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">🏨 Hôtels & Résidences Recommandés</h2>
-            </div>
-
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between">
-                    <div>
-                        <i data-lucide="hotel" class="w-8 h-8 text-brand-600 mb-3"></i>
-                        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Hôtels & Resorts</h3>
-                        <p class="text-xs text-slate-500 mb-4">Pour un séjour tout confort avec services hôteliers.</p>
-                    </div>
-                    <button onclick="searchDirectCategory('Hôtel 4 étoiles 5 étoiles')" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition">
-                        Rechercher les Hôtels
-                    </button>
-                </div>
-
-                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between">
-                    <div>
-                        <i data-lucide="home" class="w-8 h-8 text-emerald-600 mb-3"></i>
-                        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Maison d'Hôtes & BNB</h3>
-                        <p class="text-xs text-slate-500 mb-4">Expérience authentique et chaleureuse.</p>
-                    </div>
-                    <button onclick="searchDirectCategory('Maison d hôtes BNB')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition">
-                        Rechercher Maisons d'Hôtes
-                    </button>
-                </div>
-
-                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between">
-                    <div>
-                        <i data-lucide="building-2" class="w-8 h-8 text-amber-600 mb-3"></i>
-                        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Appart-Hôtels</h3>
-                        <p class="text-xs text-slate-500 mb-4">Idéal pour l'autonomie et les séjours longs.</p>
-                    </div>
-                    <button onclick="searchDirectCategory('Appartement meublé location saisonnière')" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition">
-                        Rechercher Appart-Hôtels
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- SECTION 5 : PLAN DE SÉJOUR IDÉAL INTERACTIF -->
-    <section id="sejour-ideal" class="py-12 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-2xl mx-auto mb-10">
-                <span class="text-brand-600 font-bold text-xs uppercase tracking-wider">Organisation Stratégique</span>
-                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">🗓️ Plan de Séjour Idéal Interactif</h2>
-                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Suivez ces 4 étapes clés et cliquez sur les actions pour exécuter votre plan à proximité.</p>
-            </div>
-
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between shadow-sm hover:border-brand-500 transition">
-                    <div>
-                        <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-brand-100 text-brand-700 mb-3">Étape 1</span>
-                        <h4 class="font-bold text-base text-slate-900 dark:text-white mb-2">Analyse du Périmètre</h4>
-                        <p class="text-xs text-slate-500 mb-4">Repérez les services vitaux (pharmacies, banques, transports) dans un rayon de 2 km.</p>
-                    </div>
-                    <button onclick="searchDirectCategory('Pharmacie banque distributeur ATM')" class="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition">
-                        🔍 Analyser le Périmètre
-                    </button>
-                </div>
-
-                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between shadow-sm hover:border-brand-500 transition">
-                    <div>
-                        <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-700 mb-3">Étape 2</span>
-                        <h4 class="font-bold text-base text-slate-900 dark:text-white mb-2">Choix du Logement</h4>
-                        <p class="text-xs text-slate-500 mb-4">Sélectionnez votre hôtel ou appartement meublé idéal autour de vous.</p>
-                    </div>
-                    <button onclick="searchDirectCategory('Hôtel appartement meublé')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition">
-                        🏨 Trouver un Logement
-                    </button>
-                </div>
-
-                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between shadow-sm hover:border-brand-500 transition">
-                    <div>
-                        <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-700 mb-3">Étape 3</span>
-                        <h4 class="font-bold text-base text-slate-900 dark:text-white mb-2">Restauration & Sorties</h4>
-                        <p class="text-xs text-slate-500 mb-4">Planifiez vos repas, cafés et découvertes touristiques ou d'affaires.</p>
-                    </div>
-                    <button onclick="searchDirectCategory('Restaurant café supermarché')" class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition">
-                        🍽️ Explorer les Sorties
-                    </button>
-                </div>
-
-                <div class="p-6 rounded-2xl glass-card border flex flex-col justify-between shadow-sm hover:border-red-500 transition">
-                    <div>
-                        <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-red-100 text-red-700 mb-3">Étape 4</span>
-                        <h4 class="font-bold text-base text-slate-900 dark:text-white mb-2">Sécurité & Urgences</h4>
-                        <p class="text-xs text-slate-500 mb-4">Localisez instantanément les services de santé et d'urgence médicale.</p>
-                    </div>
-                    <button onclick="searchDirectCategory('Médecin d urgence clinique')" class="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition">
-                        🚨 Contacts Urgence
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- MODALE COMPTE / INSCRIPTION -->
-    <div id="authModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl relative">
-            <button onclick="toggleAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+    <!-- MODALE BOUSSOLE PLEIN ÉCRAN -->
+    <div id="compassModal" class="fixed inset-0 bg-slate-950/95 z-50 hidden flex flex-col items-center justify-between p-6">
+        <div class="w-full flex justify-between items-center max-w-md">
+            <span class="text-white font-bold text-sm flex items-center gap-2"><i data-lucide="compass" class="w-5 h-5 text-brand-500"></i> Mode Cap PWA</span>
+            <button onclick="toggleCompassModal()" class="text-slate-400 hover:text-white p-2">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
-            <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-2 text-center">S'inscrire à Boussole & Goals</h3>
-            <p class="text-xs text-slate-500 text-center mb-6">Sauvegardez vos emplacements et préférences de voyage.</p>
-            <form onsubmit="handleAuth(event)" class="space-y-4">
+        </div>
+
+        <div class="relative w-72 h-72 sm:w-96 sm:h-96 rounded-full border-4 border-slate-800 flex items-center justify-center bg-slate-900 shadow-2xl">
+            <div id="modalCompassRing" class="compass-ring absolute inset-3 rounded-full border-2 border-dashed border-slate-700 flex items-center justify-center">
+                <span class="absolute top-3 font-black text-red-500 text-xl" id="modalCardN">N</span>
+                <span class="absolute right-4 font-bold text-slate-400 text-base" id="modalCardE">E</span>
+                <span class="absolute bottom-3 font-bold text-slate-400 text-base" id="modalCardS">S</span>
+                <span class="absolute left-4 font-bold text-slate-400 text-base" id="modalCardW">O</span>
+            </div>
+            <div id="modalCompassNeedle" class="compass-ring relative w-48 h-48 sm:w-60 sm:h-60 flex items-center justify-center">
+                <div class="w-3 h-24 sm:h-30 bg-gradient-to-b from-red-600 to-red-400 rounded-t-full shadow-lg"></div>
+                <div class="w-3 h-24 sm:h-30 bg-gradient-to-b from-slate-500 to-slate-800 rounded-b-full shadow-lg"></div>
+                <div class="absolute w-8 h-8 rounded-full bg-slate-900 border-4 border-white shadow-xl"></div>
+            </div>
+        </div>
+
+        <div class="text-center space-y-2 mb-6">
+            <div class="text-5xl font-black text-white font-mono"><span id="modalHeadingVal">0</span>°</div>
+            <p id="modalHeadingCardinal" class="text-sm font-bold text-brand-400 uppercase tracking-widest">NORD</p>
+        </div>
+    </div>
+
+    <!-- MODALE AJOUT FAVORI -->
+    <div id="bookmarkModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 data-i18n="modalAddBookmarkTitle" class="text-lg font-bold text-slate-900 dark:text-white">Ajouter un repère favori</h3>
+                <button onclick="closeAddBookmarkModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="saveBookmark(event)" class="space-y-3">
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Nom complet</label>
-                    <input type="text" required placeholder="Votre nom" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm outline-none">
+                    <label data-i18n="lblBookmarkName" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Titre du repère</label>
+                    <input type="text" id="bmTitle" required placeholder="Ex: Mon Hôtel, Pharmacie Nuit..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Email</label>
-                    <input type="email" required placeholder="nom@domaine.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm outline-none">
+                    <label data-i18n="lblCategory" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Catégorie</label>
+                    <select id="bmCategory" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs outline-none font-bold">
+                        <option value="Urgence" data-i18n="optUrgency">🚨 Urgence / Santé</option>
+                        <option value="Hébergement" data-i18n="optHousing">🏨 Hébergement / Logement</option>
+                        <option value="Loisir" data-i18n="optDining">🍽️ Restaurant / Café</option>
+                        <option value="Autre" data-i18n="optOther">📍 Repère Personnel</option>
+                    </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Mot de passe</label>
-                    <input type="password" required placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm outline-none">
+                    <label data-i18n="lblNotes" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Note / Description</label>
+                    <textarea id="bmNotes" rows="2" placeholder="Numéro de chambre, digicode..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs outline-none"></textarea>
                 </div>
-                <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow transition text-sm">Valider l'inscription</button>
+                <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow text-xs transition">
+                    <span data-i18n="btnSaveBookmark">Enregistrer</span>
+                </button>
             </form>
         </div>
     </div>
 
-    <!-- FOOTER -->
-    <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800 text-center text-xs">
-        <div class="max-w-7xl mx-auto px-4 space-y-3">
-            <p>&copy; 2026 Boussole & Goals. Tous droits réservés. | 
-               <a href="privacy.html" class="text-blue-400 hover:text-blue-300 underline transition">Politique de Confidentialité</a>
-            </p>
-        </div>
-    </footer>
-
-    <!-- JAVASCRIPT -->
+    <!-- JAVASCRIPT LOGIC & I18N -->
     <script>
         lucide.createIcons();
 
-        let userLatitude = 36.8065;
-        let userLongitude = 10.1815;
+        // TRADUCTIONS DYNAMIQUES (FR / EN / AR)
+        const translations = {
+            fr: {
+                docTitle: "Boussole & Goals — Navigation, Urgences, POI & Guide de Séjour",
+                navSubtitle: "Navigation & Sécurité GPS",
+                navCap: "Cap Boussole",
+                navEmergencies: "Secours",
+                navMap: "Carte POI",
+                navBookmarks: "Carnet",
+                navHousing: "Logements",
+                installPwa: "Installer PWA",
+                heroBadge: "Cap GPS & Urgences Géolocalisées 24/7",
+                heroTitleStart: "Votre Boussole digitale.",
+                heroTitleMid: "Vos urgences",
+                heroTitleEnd: "à portée de main.",
+                heroDesc: "Visualisez votre direction exacte, localisez les services médicaux de garde, trouvez des logements meublés vérifiés et enregistrez vos lieux stratégiques en temps réel.",
+                btnRefreshPos: "Actualiser ma position",
+                btnDirectEmergencies: "Urgences Directes",
+                btnFullscreenCompass: "Boussole Plein Écran",
+                lblGps: "GPS",
+                lblPrecision: "Précision",
+                lblSensorHeading: "Cap Capteur",
+                btnEnableSensor: "Activer le capteur de cap dynamique",
+                urgencySubtitle: "Secours & Assistance Immédiate",
+                urgencyTitle: "🚨 Appels d'Urgence par Pays",
+                btnDutyPharmacies: "Pharmacies de garde",
+                btnHospitals: "Hôpitaux & Cliniques",
+                btnDoctors: "Médecins & Cabinets",
+                mapSubtitle: "Cartographie Avancée",
+                mapTitle: "📍 Points d'Intérêt (POI) & Distance",
+                filterAll: "Tous",
+                filterPharmacy: "💊 Pharmacies",
+                filterEmergency: "🚨 Urgences",
+                filterDining: "🍽️ Restos/Cafés",
+                filterHotels: "🏨 Hôtels",
+                filterServices: "⛽ Stations/Banques",
+                searchPlaceholder: "Rechercher une adresse ou un service...",
+                btnLocate: "Localiser",
+                nearbyTitle: "Lieux & Distances Proches :",
+                bookmarksSubtitle: "Gestion Personnalisée",
+                bookmarksTitle: "📓 Carnet de Voyage & Favoris",
+                btnExport: "Exporter JSON",
+                btnAddBookmark: "Ajouter un repère",
+                housingSubtitle: "Séjour & Hébergement",
+                housingTitle: "🏠 Plateformes de Logement Directes",
+                housingDesc: "Accédez instantanément aux plateformes d'annonces vérifiées par pays.",
+                footerDesc: "Application Web PWA universelle de géolocalisation, boussole dynamique et gestion d'urgences locales.",
+                footerRights: "Tous droits réservés.",
+                modalAddBookmarkTitle: "Ajouter un repère favori",
+                lblBookmarkName: "Titre du repère",
+                lblCategory: "Catégorie",
+                optUrgency: "🚨 Urgence / Santé",
+                optHousing: "🏨 Hébergement / Logement",
+                optDining: "🍽️ Restaurant / Café",
+                optOther: "📍 Repère Personnel",
+                lblNotes: "Note / Description",
+                btnSaveBookmark: "Enregistrer",
+                bmPlaceholder: "Ex: Mon Hôtel, Pharmacie Nuit...",
+                bmNotesPlaceholder: "Numéro de chambre, digicode...",
+                userHere: "📍 Vous êtes ici",
+                userGpsDesc: "Position GPS dynamique",
+                countryPrefix: "Pays :",
+                cardinalN: "N", cardinalE: "E", cardinalS: "S", cardinalW: "O",
+                visitSite: "Visiter le Site",
+                wazeNav: "Lancer Navigation Waze 🚗",
+                noBookmarks: "Aucun repère enregistré. Cliquez sur \"Ajouter un repère\".",
+                shareTitle: "Partager le repère :"
+            },
+            en: {
+                docTitle: "Compass & Goals — Navigation, Emergency, POI & Stay Guide",
+                navSubtitle: "GPS Navigation & Safety",
+                navCap: "Compass Heading",
+                navEmergencies: "Emergency",
+                navMap: "POI Map",
+                navBookmarks: "Journal",
+                navHousing: "Housing",
+                installPwa: "Install PWA",
+                heroBadge: "24/7 Live GPS Heading & Emergency",
+                heroTitleStart: "Your Digital Compass.",
+                heroTitleMid: "Your emergency services",
+                heroTitleEnd: "at your fingertips.",
+                heroDesc: "View your exact heading, locate duty medical services, find verified furnished rentals, and save your strategic places in real time.",
+                btnRefreshPos: "Refresh my position",
+                btnDirectEmergencies: "Direct Emergencies",
+                btnFullscreenCompass: "Fullscreen Compass",
+                lblGps: "GPS",
+                lblPrecision: "Accuracy",
+                lblSensorHeading: "Sensor Heading",
+                btnEnableSensor: "Enable dynamic compass sensor",
+                urgencySubtitle: "Immediate Assistance & Safety",
+                urgencyTitle: "🚨 Emergency Numbers by Country",
+                btnDutyPharmacies: "On-duty Pharmacies",
+                btnHospitals: "Hospitals & Clinics",
+                btnDoctors: "Doctors & Clinics",
+                mapSubtitle: "Advanced Mapping",
+                mapTitle: "📍 Points of Interest (POI) & Distance",
+                filterAll: "All",
+                filterPharmacy: "💊 Pharmacies",
+                filterEmergency: "🚨 Emergencies",
+                filterDining: "🍽️ Food & Drinks",
+                filterHotels: "🏨 Hotels",
+                filterServices: "⛽ Gas & Banks",
+                searchPlaceholder: "Search for an address or service...",
+                btnLocate: "Search",
+                nearbyTitle: "Nearby Places & Distances:",
+                bookmarksSubtitle: "Personal Management",
+                bookmarksTitle: "📓 Travel Journal & Bookmarks",
+                btnExport: "Export JSON",
+                btnAddBookmark: "Add Bookmark",
+                housingSubtitle: "Stay & Accommodation",
+                housingTitle: "🏠 Direct Rental Platforms",
+                housingDesc: "Instant access to verified housing platforms per country.",
+                footerDesc: "Universal PWA Web app for geolocation, live compass, and local emergency handling.",
+                footerRights: "All rights reserved.",
+                modalAddBookmarkTitle: "Add a Favorite Bookmark",
+                lblBookmarkName: "Bookmark Title",
+                lblCategory: "Category",
+                optUrgency: "🚨 Emergency / Health",
+                optHousing: "🏨 Housing / Accommodation",
+                optDining: "🍽️ Restaurant / Cafe",
+                optOther: "📍 Personal Landmark",
+                lblNotes: "Notes / Description",
+                btnSaveBookmark: "Save Bookmark",
+                bmPlaceholder: "Ex: My Hotel, Night Pharmacy...",
+                bmNotesPlaceholder: "Room number, gate code...",
+                userHere: "📍 You are here",
+                userGpsDesc: "Dynamic GPS Location",
+                countryPrefix: "Country:",
+                cardinalN: "N", cardinalE: "E", cardinalS: "S", cardinalW: "W",
+                visitSite: "Visit Website",
+                wazeNav: "Start Waze Navigation 🚗",
+                noBookmarks: "No bookmarks saved. Click \"Add Bookmark\".",
+                shareTitle: "Share landmark:"
+            },
+            ar: {
+                docTitle: "بوصلة والأهداف — الملاحة، الطوارئ، الخريطة ودليل الإقامة",
+                navSubtitle: "الملاحة والأمان عبر GPS",
+                navCap: "الاتجاه والبوصلة",
+                navEmergencies: "الطوارئ",
+                navMap: "الخريطة والخدمات",
+                navBookmarks: "دفتر الرحلة",
+                navHousing: "السكن والشقق",
+                installPwa: "تثبيت التطبيق",
+                heroBadge: "اتجاه مباشر وطوارئ على مدار الساعة 24/7",
+                heroTitleStart: "بوصلتك الرقمية الذكية.",
+                heroTitleMid: "خدمات الطوارئ",
+                heroTitleEnd: "بين يديك مباشرة.",
+                heroDesc: "اعرف اتجاهك بدقة، حدد مواقع الصيدليات والأطباء المناوبين، اعثر على شقق مفروشة موثوقة واحفظ أماكنك الهامة فوراً.",
+                btnRefreshPos: "تحديث موقعي الآن",
+                btnDirectEmergencies: "اتصال مباشر بالطوارئ",
+                btnFullscreenCompass: "البوصلة بالشاشة الكاملة",
+                lblGps: "الموقع (GPS)",
+                lblPrecision: "الدقة",
+                lblSensorHeading: "اتجاه المستشعر",
+                btnEnableSensor: "تفعيل مستشعر الاتجاه المباشر",
+                urgencySubtitle: "النجدة والمساعدة الفورية",
+                urgencyTitle: "🚨 أرقام الطوارئ حسب الدولة",
+                btnDutyPharmacies: "صيدليات الليل والحراسة",
+                btnHospitals: "المستشفيات والمصحات",
+                btnDoctors: "الأطباء والعيادات",
+                mapSubtitle: "خرائط وتحديد المواقع",
+                mapTitle: "📍 الأماكن الهامة (POI) والمسافة",
+                filterAll: "الكل",
+                filterPharmacy: "💊 صيدليات",
+                filterEmergency: "🚨 طوارئ",
+                filterDining: "🍽️ مطاعم ومقاهي",
+                filterHotels: "🏨 فنادق",
+                filterServices: "⛽ محطات وبنوك",
+                searchPlaceholder: "ابحث عن عنوان أو خدمة مجاورة...",
+                btnLocate: "تحديد",
+                nearbyTitle: "الأماكن القريبة والمسافات:",
+                bookmarksSubtitle: "إدارة شخصية",
+                bookmarksTitle: "📓 دفتر الرحلة والأماكن المفضلة",
+                btnExport: "تصدير JSON",
+                btnAddBookmark: "إضافة موقع مفضل",
+                housingSubtitle: "الإقامة والسكن",
+                housingTitle: "🏠 منصات حجز الشقق والفنادق",
+                housingDesc: "وصول مباشر لمنصات الإعلانات والعقارات الموثوقة لكل دولة.",
+                footerDesc: "تطبيق PWA شامل للملاحة بالبوصلة، تحديد المواقع وطوارئ الرحلات.",
+                footerRights: "جميع الحقوق محفوظة.",
+                modalAddBookmarkTitle: "إضافة موقع مفضل جديد",
+                lblBookmarkName: "عنوان الموقع",
+                lblCategory: "الفئة",
+                optUrgency: "🚨 طوارئ / صحة",
+                optHousing: "🏨 إقامة / سكن",
+                optDining: "🍽️ مطعم / مقهى",
+                optOther: "📍 موقع شخصي",
+                lblNotes: "ملاحظات / وصف",
+                btnSaveBookmark: "حفظ الموقع",
+                bmPlaceholder: "مثال: الفندق، صيدلية الليل...",
+                bmNotesPlaceholder: "رقم الغرفة، رمز الباب...",
+                userHere: "📍 أنت هنا الآن",
+                userGpsDesc: "إحداثيات GPS الحالية",
+                countryPrefix: "الدولة:",
+                cardinalN: "ش", cardinalE: "ق", cardinalS: "ج", cardinalW: "غ",
+                visitSite: "زيارة الموقع",
+                wazeNav: "فتح الملاحة عبر Waze 🚗",
+                noBookmarks: "لا توجد مواقع محفوظة. اضغط على \"إضافة موقع مفضل\".",
+                shareTitle: "مشاركة الموقع:"
+            }
+        };
+
+        // STATE GLOBAL
+        let currentLang = 'fr';
+        let userLat = 36.8065;
+        let userLng = 10.1815;
+        let userHeading = 0;
         let map, userMarker;
+        let poiMarkersGroup;
         let deferredPrompt;
+        let activeCategory = 'all';
 
-        function setQuery(val) {
-            document.getElementById('searchQuery').value = val;
+        // FONCTION CHANGEMENT DE LANGUE
+        function changeLanguage(lang) {
+            if (!translations[lang]) return;
+            currentLang = lang;
+
+            // Direction RTL pour l'arabe, LTR pour fr/en
+            const isRtl = (lang === 'ar');
+            document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+            document.documentElement.lang = lang;
+
+            const t = translations[lang];
+
+            // Remplacement de tous les attributs data-i18n
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) {
+                    el.innerText = t[key];
+                }
+            });
+
+            // Mettre à jour placeholders
+            const searchInput = document.getElementById('poiSearchInput');
+            if (searchInput) searchInput.placeholder = t.searchPlaceholder;
+
+            const bmTitle = document.getElementById('bmTitle');
+            if (bmTitle) bmTitle.placeholder = t.bmPlaceholder;
+
+            const bmNotes = document.getElementById('bmNotes');
+            if (bmNotes) bmNotes.placeholder = t.bmNotesPlaceholder;
+
+            // Titre du document
+            document.getElementById('docTitle').innerText = t.docTitle;
+
+            // Mettre à jour la Rose des vents (Cardinaux)
+            document.getElementById('cardinalN').innerText = t.cardinalN;
+            document.getElementById('cardinalE').innerText = t.cardinalE;
+            document.getElementById('cardinalS').innerText = t.cardinalS;
+            document.getElementById('cardinalW').innerText = t.cardinalW;
+
+            document.getElementById('modalCardN').innerText = t.cardinalN;
+            document.getElementById('modalCardE').innerText = t.cardinalE;
+            document.getElementById('modalCardS').innerText = t.cardinalS;
+            document.getElementById('modalCardW').innerText = t.cardinalW;
+
+            // Re-render dynamiques
+            const countrySelect = document.getElementById('countrySelect');
+            if (countrySelect) changeCountry(countrySelect.value);
+
+            const housingCountrySelect = document.getElementById('housingCountrySelect');
+            if (housingCountrySelect) renderHousingSites(housingCountrySelect.value);
+
+            renderBookmarks();
+            fetchNearbyPois(userLat, userLng);
         }
 
-        // --- CARTE ESRI GRATUITE ---
-        function initMap(lat, lng) {
-            if (!map) {
-                map = L.map('map').setView([lat, lng], 14);
-                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-                    maxZoom: 19,
-                    attribution: 'Tiles &copy; Esri'
-                }).addTo(map);
-
-                userMarker = L.marker([lat, lng]).addTo(map)
-                    .bindPopup("<b>Votre position repérable !</b><br>Lat: " + lat.toFixed(5) + " | Lng: " + lng.toFixed(5)).openPopup();
-            } else {
-                map.setView([lat, lng], 14);
-                userMarker.setLatLng([lat, lng])
-                    .bindPopup("<b>Position mise à jour !</b><br>Lat: " + lat.toFixed(5) + " | Lng: " + lng.toFixed(5)).openPopup();
+        // BASE DE DONNÉES URGENCES PAR PAYS
+        const emergencyData = {
+            TN: {
+                name: "Tunisie",
+                flag: "🇹🇳",
+                numbers: [
+                    { title: "SAMU Urgence", num: "190", icon: "stethoscope", color: "bg-red-500" },
+                    { title: "Police Secours", num: "197", icon: "shield-alert", color: "bg-blue-600" },
+                    { title: "Protection Civile", num: "198", icon: "flame", color: "bg-amber-600" },
+                    { title: "Garde Nationale", num: "193", icon: "siren", color: "bg-emerald-600" }
+                ]
+            },
+            FR: {
+                name: "France",
+                flag: "🇫🇷",
+                numbers: [
+                    { title: "SAMU", num: "15", icon: "stethoscope", color: "bg-red-500" },
+                    { title: "Police Secours", num: "17", icon: "shield-alert", color: "bg-blue-600" },
+                    { title: "Sapeurs-Pompiers", num: "18", icon: "flame", color: "bg-amber-600" },
+                    { title: "Urgence Européenne", num: "112", icon: "siren", color: "bg-indigo-600" }
+                ]
+            },
+            MA: {
+                name: "Maroc",
+                flag: "🇲🇦",
+                numbers: [
+                    { title: "SAMU / Ambulance", num: "141", icon: "stethoscope", color: "bg-red-500" },
+                    { title: "Police Secours", num: "19", icon: "shield-alert", color: "bg-blue-600" },
+                    { title: "Gendarmerie", num: "177", icon: "siren", color: "bg-emerald-600" },
+                    { title: "Pompiers", num: "15", icon: "flame", color: "bg-amber-600" }
+                ]
+            },
+            DZ: {
+                name: "Algérie",
+                flag: "🇩🇿",
+                numbers: [
+                    { title: "SAMU", num: "16", icon: "stethoscope", color: "bg-red-500" },
+                    { title: "Police Secours", num: "17", icon: "shield-alert", color: "bg-blue-600" },
+                    { title: "Protection Civile", num: "14", icon: "flame", color: "bg-amber-600" },
+                    { title: "Gendarmerie", num: "1055", icon: "siren", color: "bg-emerald-600" }
+                ]
+            },
+            EU: {
+                name: "Europe",
+                flag: "🇪🇺",
+                numbers: [
+                    { title: "Numéro Unique Urgence", num: "112", icon: "siren", color: "bg-indigo-600" },
+                    { title: "Ambulance", num: "112", icon: "stethoscope", color: "bg-red-500" },
+                    { title: "Police", num: "112", icon: "shield-alert", color: "bg-blue-600" }
+                ]
+            },
+            US: {
+                name: "USA / Canada",
+                flag: "🇺🇸",
+                numbers: [
+                    { title: "Emergency 911", num: "911", icon: "siren", color: "bg-red-600" }
+                ]
             }
-        }
+        };
 
-        function getLocateUser() {
-            const geoSection = document.getElementById('geolocalisation');
-            if (geoSection) { geoSection.scrollIntoView({ behavior: 'smooth' }); }
-
-            const statusBox = document.getElementById('locationStatus');
-            if (!navigator.geolocation) {
-                statusBox.innerHTML = "<span class='text-red-500'>⚠️ La géolocalisation n'est pas supportée.</span>";
-                return;
-            }
-
-            statusBox.innerHTML = "<span class='text-brand-600 font-bold'>⏳ Acquisition des coordonnées GPS repérables...</span>";
-
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    userLatitude = pos.coords.latitude;
-                    userLongitude = pos.coords.longitude;
-                    statusBox.innerHTML = `
-                        <div class="text-emerald-600 dark:text-emerald-400 font-bold text-sm">
-                            ✅ <strong>Coordonnées Repérables Détectées !</strong><br>
-                            <span class="text-xs text-slate-600 dark:text-slate-300">Latitude : ${userLatitude.toFixed(5)} | Longitude : ${userLongitude.toFixed(5)}</span>
-                        </div>`;
-                    initMap(userLatitude, userLongitude);
-                },
-                (err) => {
-                    statusBox.innerHTML = `<span class='text-amber-600 font-semibold'>⚠️ GPS non accessible : ${err.message}. Position par défaut activée.</span>`;
-                    initMap(userLatitude, userLongitude);
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-        }
-
-        function searchNearby() {
-            const query = document.getElementById('searchQuery').value.trim();
-            if (!query) { alert("Veuillez saisir un terme de recherche."); return; }
-            window.open(`https://www.google.com/maps/search/${encodeURIComponent(query)}/@${userLatitude},${userLongitude},15z`, '_blank');
-        }
-
-        function searchDirectCategory(category) {
-            window.open(`https://www.google.com/maps/search/${encodeURIComponent(category)}/@${userLatitude},${userLongitude},15z`, '_blank');
-        }
-
-        const realEstateSites = {
-            tn: [
-                { name: "Tayara.tn", desc: "1er site de petites annonces et location d'appartements en Tunisie.", url: "https://www.tayara.tn/c/immobilier/locations/appartements" },
-                { name: "Mubawab.tn", desc: "Portail spécialisé en immobilier et appartements meublés en Tunisie.", url: "https://www.mubawab.tn/" },
+        // BASE DE DONNÉES LOGEMENTS PAR PAYS
+        const housingData = {
+            TN: [
+                { name: "Tayara.tn", desc: "1er site de petites annonces et location meublée en Tunisie.", url: "https://www.tayara.tn/c/immobilier/locations/appartements" },
+                { name: "Mubawab.tn", desc: "Portail immobilier de référence pour séjours courts et longs.", url: "https://www.mubawab.tn/" },
                 { name: "Tunisie-Annonce", desc: "Annonces directes de particuliers et agences.", url: "http://www.tunisie-annonce.com/" }
             ],
-            fr: [
-                { name: "Leboncoin.fr", desc: "Leader des annonces de location meublée en France.", url: "https://www.leboncoin.fr/c/locations" },
-                { name: "SeLoger", desc: "Référence de l'immobilier résidentiel en France.", url: "https://www.seloger.com/" }
+            FR: [
+                { name: "Leboncoin.fr", desc: "Incontournable pour les appartements meublés en France.", url: "https://www.leboncoin.fr/c/locations" },
+                { name: "SeLoger", desc: "Spécialiste de la location d'appartements et studios.", url: "https://www.seloger.com/" },
+                { name: "PAP.fr", desc: "De particulier à particulier, sans frais d'agence.", url: "https://www.pap.fr/" }
             ],
-            ma: [
-                { name: "Avito.ma", desc: "Portail d'annonces de référence au Maroc.", url: "https://www.avito.ma/" },
-                { name: "Mubawab.ma", desc: "Locations meublées et appartements au Maroc.", url: "https://www.mubawab.ma/" }
+            MA: [
+                { name: "Avito.ma", desc: "Portail n°1 d'annonces de logements au Maroc.", url: "https://www.avito.ma/" },
+                { name: "Mubawab.ma", desc: "Locations meublées et appart-hôtels au Maroc.", url: "https://www.mubawab.ma/" }
             ],
-            global: [
-                { name: "Airbnb", desc: "Réservation globale d'appartements meublés.", url: "https://www.airbnb.com/" },
-                { name: "Booking.com", desc: "Locations de vacances et appart-hôtels mondiaux.", url: "https://www.booking.com/" }
+            GLOBAL: [
+                { name: "Airbnb", desc: "Réservation globale d'appartements meublés et villas.", url: "https://www.airbnb.com/" },
+                { name: "Booking.com", desc: "Hôtels, appart-hôtels et hébergements vérifiés.", url: "https://www.booking.com/" },
+                { name: "Vrbo", desc: "Locations de vacances pour familles et groupes.", url: "https://www.vrbo.com/" }
             ]
         };
 
-        function filterRealEstateSites(country) {
-            const grid = document.getElementById('sitesGrid');
-            grid.innerHTML = '';
-            const sites = realEstateSites[country] || realEstateSites.tn;
+        // INITIALISATION CARTE LEAFLET
+        function initMap(lat, lng) {
+            const t = translations[currentLang];
+            if (!map) {
+                map = L.map('map').setView([lat, lng], 14);
+                
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    attribution: '&copy; Esri & OpenStreetMap contributors'
+                }).addTo(map);
 
-            sites.forEach(site => {
-                grid.innerHTML += `
-                    <div class="p-5 rounded-2xl glass-card border flex flex-col justify-between hover:border-brand-500 transition shadow-sm">
-                        <div>
-                            <h4 class="font-bold text-base text-slate-900 dark:text-white mb-1">${site.name}</h4>
-                            <p class="text-xs text-slate-500 mb-4">${site.desc}</p>
+                poiMarkersGroup = L.layerGroup().addTo(map);
+
+                const userIcon = L.divIcon({
+                    className: 'custom-user-pin',
+                    html: `<div class="w-6 h-6 rounded-full bg-brand-600 border-4 border-white shadow-xl animate-pulse"></div>`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+
+                userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map)
+                    .bindPopup(`<b>${t.userHere}</b><br>${t.userGpsDesc}`).openPopup();
+
+            } else {
+                map.setView([lat, lng], 14);
+                userMarker.setLatLng([lat, lng]);
+            }
+
+            fetchNearbyPois(lat, lng);
+        }
+
+        // CALCUL DE DISTANCE HAVERSINE
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const d = R * c;
+            if (d < 1) {
+                return `${Math.round(d * 1000)} m`;
+            }
+            return `${d.toFixed(1)} km`;
+        }
+
+        // RECHERCHE DYNAMIQUE POI
+        function fetchNearbyPois(lat, lng) {
+            poiMarkersGroup.clearLayers();
+            const poiListContainer = document.getElementById('poiList');
+            poiListContainer.innerHTML = '';
+            const t = translations[currentLang];
+
+            const mockPois = [
+                { name: "Pharmacie de Garde Principale", type: "pharmacy", lat: lat + 0.003, lng: lng + 0.002, category: t.filterPharmacy },
+                { name: "Clinique Urgence 24/7", type: "hospital", lat: lat - 0.004, lng: lng + 0.005, category: t.filterEmergency },
+                { name: "Café & Espace Coworking", type: "restaurant", lat: lat + 0.002, lng: lng - 0.003, category: t.filterDining },
+                { name: "Hôtel & Résidence Horizon", type: "hotel", lat: lat - 0.002, lng: lng - 0.004, category: t.filterHotels },
+                { name: "Station-Service & ATM", type: "fuel", lat: lat + 0.005, lng: lng + 0.001, category: t.filterServices },
+                { name: "Cabinet Médical de Garde", type: "doctors", lat: lat - 0.001, lng: lng + 0.003, category: t.filterEmergency }
+            ];
+
+            let count = 0;
+
+            mockPois.forEach(poi => {
+                if (activeCategory !== 'all' && poi.type !== activeCategory) return;
+                count++;
+
+                const distStr = calculateDistance(lat, lng, poi.lat, poi.lng);
+                
+                let badgeColor = "bg-brand-500";
+                if(poi.type === 'pharmacy') badgeColor = "bg-emerald-500";
+                if(poi.type === 'hospital' || poi.type === 'doctors') badgeColor = "bg-red-500";
+                if(poi.type === 'restaurant') badgeColor = "bg-amber-500";
+                if(poi.type === 'hotel') badgeColor = "bg-blue-500";
+                if(poi.type === 'fuel') badgeColor = "bg-purple-500";
+
+                const customIcon = L.divIcon({
+                    className: 'custom-poi-marker',
+                    html: `<div class="w-5 h-5 rounded-full ${badgeColor} border-2 border-white shadow-lg"></div>`,
+                    iconSize: [20, 20]
+                });
+
+                const marker = L.marker([poi.lat, poi.lng], { icon: customIcon }).addTo(poiMarkersGroup);
+                marker.bindPopup(`
+                    <div class="text-xs p-1">
+                        <b class="text-sm">${poi.name}</b><br>
+                        <span class="text-slate-500">${poi.category} — à ${distStr}</span><br>
+                        <a href="https://www.waze.com/ul?ll=${poi.lat},${poi.lng}&navigate=yes" target="_blank" class="text-blue-600 font-bold block mt-1">${t.wazeNav}</a>
+                    </div>
+                `);
+
+                poiListContainer.innerHTML += `
+                    <div class="p-3.5 rounded-2xl glass-card border hover:border-brand-500 transition flex items-center justify-between text-xs">
+                        <div class="space-y-0.5">
+                            <span class="font-bold text-slate-900 dark:text-white block">${poi.name}</span>
+                            <span class="text-slate-500 font-medium">${poi.category} • <strong class="text-brand-600">${distStr}</strong></span>
                         </div>
-                        <a href="${site.url}" target="_blank" rel="noopener noreferrer" class="w-full text-center py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition">
-                            Visiter le Site Direct 🔗
-                        </a>
-                    </div>`;
+                        <div class="flex gap-1">
+                            <a href="https://maps.google.com/?q=${poi.lat},${poi.lng}" target="_blank" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-brand-600 hover:text-white transition">
+                                <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
             });
+
+            document.getElementById('resultsCount').innerText = `${count} POI`;
+            lucide.createIcons();
         }
 
-        function toggleAuthModal() {
-            document.getElementById('authModal').classList.toggle('hidden');
+        // FILTRAGE CATEGORIE
+        function filterPoiCategory(cat) {
+            activeCategory = cat;
+            document.querySelectorAll('.poi-btn').forEach(btn => btn.classList.remove('active', 'bg-slate-900', 'text-white'));
+            fetchNearbyPois(userLat, userLng);
         }
 
-        function handleAuth(e) {
+        // GEOLOCALISATION
+        function getLocateUser() {
+            if (!navigator.geolocation) {
+                alert("La géolocalisation n'est pas disponible.");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    userLat = pos.coords.latitude;
+                    userLng = pos.coords.longitude;
+                    const accuracy = Math.round(pos.coords.accuracy);
+
+                    document.getElementById('latLngTxt').innerText = `${userLat.toFixed(4)}, ${userLng.toFixed(4)}`;
+                    document.getElementById('accuracyTxt').innerText = `± ${accuracy} m`;
+
+                    initMap(userLat, userLng);
+                },
+                (err) => {
+                    document.getElementById('latLngTxt').innerText = `${userLat.toFixed(4)}, ${userLng.toFixed(4)}`;
+                    initMap(userLat, userLng);
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        // BOUSSOLE DYNAMIQUE
+        function handleOrientation(event) {
+            let heading = event.alpha;
+            if (event.webkitCompassHeading) {
+                heading = event.webkitCompassHeading;
+            }
+
+            if (heading !== null && heading !== undefined) {
+                userHeading = Math.round(heading);
+                
+                document.getElementById('compassRing').style.transform = `rotate(${-userHeading}deg)`;
+                document.getElementById('modalCompassRing').style.transform = `rotate(${-userHeading}deg)`;
+
+                document.getElementById('headingVal').innerText = userHeading;
+                document.getElementById('modalHeadingVal').innerText = userHeading;
+                document.getElementById('headingDegreeTxt').innerText = `${userHeading}° (${getCardinal(userHeading)})`;
+                document.getElementById('modalHeadingCardinal').innerText = getCardinal(userHeading);
+            }
+        }
+
+        function getCardinal(deg) {
+            const t = translations[currentLang];
+            const directions = [t.cardinalN, `${t.cardinalN}-${t.cardinalE}`, t.cardinalE, `${t.cardinalS}-${t.cardinalE}`, t.cardinalS, `${t.cardinalS}-${t.cardinalW}`, t.cardinalW, `${t.cardinalN}-${t.cardinalW}`];
+            return directions[Math.round(deg / 45) % 8];
+        }
+
+        function requestOrientationPermission() {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().then(response => {
+                    if (response === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation, true);
+                    }
+                });
+            } else {
+                window.addEventListener('deviceorientation', handleOrientation, true);
+            }
+        }
+
+        // GESTION URGENCES
+        function changeCountry(code) {
+            const country = emergencyData[code] || emergencyData.TN;
+            const t = translations[currentLang];
+            document.getElementById('currentCountryBadge').innerText = `${t.countryPrefix} ${country.name} ${country.flag}`;
+            
+            const grid = document.getElementById('emergencyNumbersGrid');
+            grid.innerHTML = '';
+
+            country.numbers.forEach(item => {
+                grid.innerHTML += `
+                    <a href="tel:${item.num}" class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition flex items-center justify-between group">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 rounded-xl ${item.color} text-white">
+                                <i data-lucide="${item.icon}" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${item.title}</h4>
+                                <span class="font-mono text-lg font-black text-red-600">${item.num}</span>
+                            </div>
+                        </div>
+                        <div class="p-2 rounded-xl bg-red-100 dark:bg-red-950 text-red-600 group-hover:scale-110 transition">
+                            <i data-lucide="phone" class="w-4 h-4"></i>
+                        </div>
+                    </a>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        // LOGEMENTS DYNAMIQUES
+        function renderHousingSites(code) {
+            const sites = housingData[code] || housingData.TN;
+            const grid = document.getElementById('housingGrid');
+            const t = translations[currentLang];
+            grid.innerHTML = '';
+
+            sites.forEach(s => {
+                grid.innerHTML += `
+                    <div class="p-5 rounded-2xl glass-card border flex flex-col justify-between hover:border-brand-500 transition shadow-sm space-y-4">
+                        <div>
+                            <h4 class="font-bold text-base text-slate-900 dark:text-white mb-1">${s.name}</h4>
+                            <p class="text-xs text-slate-500 leading-relaxed">${s.desc}</p>
+                        </div>
+                        <a href="${s.url}" target="_blank" rel="noopener noreferrer" class="w-full text-center py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5">
+                            <span>${t.visitSite}</span> <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                        </a>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        // FAVORIS
+        function getBookmarks() {
+            return JSON.parse(localStorage.getItem('boussole_bookmarks') || '[]');
+        }
+
+        function renderBookmarks() {
+            const list = getBookmarks();
+            const container = document.getElementById('bookmarksList');
+            const t = translations[currentLang];
+            container.innerHTML = '';
+
+            if(list.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 col-span-full text-center py-6">${t.noBookmarks}</p>`;
+                return;
+            }
+
+            list.forEach((bm, idx) => {
+                container.innerHTML += `
+                    <div class="p-4 rounded-2xl glass-card border flex flex-col justify-between space-y-2 relative group">
+                        <div class="flex justify-between items-start">
+                            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">${bm.category}</span>
+                            <button onclick="deleteBookmark(${idx})" class="text-slate-400 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-900 dark:text-white">${bm.title}</h4>
+                            <p class="text-xs text-slate-500 mt-1">${bm.notes || ''}</p>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-[10px] font-mono text-slate-400">
+                            <span>${bm.date}</span>
+                            <button onclick="shareBookmark('${bm.title}', '${bm.notes}')" class="text-brand-600 font-bold hover:underline flex items-center gap-1">
+                                <i data-lucide="share-2" class="w-3 h-3"></i> Partager
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        function saveBookmark(e) {
             e.preventDefault();
-            alert("Inscription réussie sur Boussole & Goals !");
-            toggleAuthModal();
+            const title = document.getElementById('bmTitle').value;
+            const category = document.getElementById('bmCategory').value;
+            const notes = document.getElementById('bmNotes').value;
+
+            const list = getBookmarks();
+            list.push({ title, category, notes, date: new Date().toLocaleDateString(currentLang) });
+            localStorage.setItem('boussole_bookmarks', JSON.stringify(list));
+
+            closeAddBookmarkModal();
+            renderBookmarks();
         }
 
-        // --- INSTALLATION PWA ---
+        function deleteBookmark(idx) {
+            const list = getBookmarks();
+            list.splice(idx, 1);
+            localStorage.setItem('boussole_bookmarks', JSON.stringify(list));
+            renderBookmarks();
+        }
+
+        function exportFavorites() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(getBookmarks()));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "boussole_bookmarks.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function shareBookmark(title, notes) {
+            if (navigator.share) {
+                navigator.share({ title: title, text: `${title}: ${notes}` });
+            } else {
+                alert(`${title}: ${notes}`);
+            }
+        }
+
+        // MODALES UTILS
+        function toggleCompassModal() {
+            document.getElementById('compassModal').classList.toggle('hidden');
+        }
+        function openAddBookmarkModal() {
+            document.getElementById('bookmarkModal').classList.remove('hidden');
+        }
+        function closeAddBookmarkModal() {
+            document.getElementById('bookmarkModal').classList.add('hidden');
+        }
+
+        function searchCustomAddress() {
+            const query = document.getElementById('poiSearchInput').value.trim();
+            if(!query) return;
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data && data.length > 0) {
+                        const newLat = parseFloat(data[0].lat);
+                        const newLng = parseFloat(data[0].lon);
+                        map.setView([newLat, newLng], 15);
+                        L.marker([newLat, newLng]).addTo(map).bindPopup(`<b>${query}</b>`).openPopup();
+                        fetchNearbyPois(newLat, newLng);
+                    }
+                });
+        }
+
+        // INSTALL PWA
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
@@ -592,23 +1207,26 @@
         function installApp() {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choice) => {
-                    if (choice.outcome === 'accepted') {
-                        document.getElementById('installPwaBtn').classList.add('hidden');
-                    }
+                deferredPrompt.userChoice.then(() => {
+                    document.getElementById('installPwaBtn').classList.add('hidden');
                     deferredPrompt = null;
                 });
             }
         }
 
-        const themeToggleBtn = document.getElementById('themeToggle');
-        themeToggleBtn.addEventListener('click', () => {
+        // THEME TOGGLE
+        document.getElementById('themeToggle').addEventListener('click', () => {
             document.documentElement.classList.toggle('dark');
         });
 
+        // INIT LOAD
         window.onload = () => {
             getLocateUser();
-            filterRealEstateSites('tn');
+            changeLanguage('fr');
+
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', handleOrientation, true);
+            }
         };
     </script>
 </body>
