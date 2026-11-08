@@ -100,6 +100,22 @@
 
     <!-- Code Google AdSense Global -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3266873353292561" crossorigin="anonymous"></script>
+    <!-- Données Structurées Schema.org pour Google -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Boussole & Goals Pro",
+      "url": "https://haykellaouiti-collab.github.io/boussole-goals/",
+      "applicationCategory": "NavigationApplication",
+      "operatingSystem": "Web, Android, iOS",
+      "description": "Application web de navigation GPS, boussole numérique, répertoire international des numéros d'urgence et guides pratiques de sécurité en voyage.",
+      "author": {
+        "@type": "Person",
+        "name": "Haykel Laouiti"
+      }
+    }
+    </script>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
 
@@ -165,16 +181,7 @@
         </div>
     </nav>
 
-    <!-- BANNIÈRE ADSENSE SUPÉRIEURE -->
-    <div class="max-w-6xl mx-auto px-4 mt-4 text-center">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="ca-pub-3266873353292561"
-             data-ad-slot="auto"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-    </div>
+
 
     <!-- MAIN CONTENT -->
     <main class="flex-grow space-y-12 py-6">
@@ -360,16 +367,7 @@
             </div>
         </section>
 
-        <!-- BANNIÈRE ADSENSE MILIEU -->
-        <div class="max-w-6xl mx-auto px-4 text-center">
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-3266873353292561"
-                 data-ad-slot="auto"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-        </div>
+
 
         <!-- MODULE 3 : CARNET DE VOYAGE ET FAVORIS (LOCALSTORAGE) -->
         <section id="favoris-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -484,6 +482,107 @@
             </div>
         </section>
 
+
+        <!-- MODULE 6 : BASE DE CONNAISSANCES, TABLEAU COMPARATIF & FAQ (CONTENU ÉDITORIAL APPROFONDI ADSENSE) -->
+        <section id="faq-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl space-y-8">
+                <div class="text-center max-w-3xl mx-auto space-y-2">
+                    <span class="text-xs font-black text-emerald-600 uppercase tracking-widest">Encyclopédie Pratique & FAQ</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">📚 Référentiel des Secours Internationaux & Questions Fréquentes</h2>
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Consultez le tableau récapitulatif des numéros d'urgence officiels par zone géographique ainsi que les réponses détaillées aux questions fréquentes sur le fonctionnement du GPS, de la boussole magnétique et de la confidentialité de vos données.
+                    </p>
+                </div>
+
+                <!-- Tableau récapitulatif riche pour indexation -->
+                <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead class="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-bold">
+                            <tr>
+                                <th class="p-3.5 border-b border-slate-200 dark:border-slate-700">Pays / Zone</th>
+                                <th class="p-3.5 border-b border-slate-200 dark:border-slate-700">Urgence Médicale (SAMU)</th>
+                                <th class="p-3.5 border-b border-slate-200 dark:border-slate-700">Police Secours</th>
+                                <th class="p-3.5 border-b border-slate-200 dark:border-slate-700">Pompiers / Protection Civile</th>
+                                <th class="p-3.5 border-b border-slate-200 dark:border-slate-700">Numéro Unique / Spécificité</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                            <tr>
+                                <td class="p-3.5 font-bold">🇹🇳 Tunisie</td>
+                                <td class="p-3.5 font-mono font-bold text-red-600">190</td>
+                                <td class="p-3.5 font-mono font-bold">197</td>
+                                <td class="p-3.5 font-mono font-bold">198</td>
+                                <td class="p-3.5">193 (Garde Nationale)</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3.5 font-bold">🇫🇷 France</td>
+                                <td class="p-3.5 font-mono font-bold text-red-600">15</td>
+                                <td class="p-3.5 font-mono font-bold">17</td>
+                                <td class="p-3.5 font-mono font-bold">18</td>
+                                <td class="p-3.5">112 (Urgence UE) / 114 (SMS)</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3.5 font-bold">🇲🇦 Maroc</td>
+                                <td class="p-3.5 font-mono font-bold text-red-600">141</td>
+                                <td class="p-3.5 font-mono font-bold">19</td>
+                                <td class="p-3.5 font-mono font-bold">15</td>
+                                <td class="p-3.5">177 (Gendarmerie Royale)</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3.5 font-bold">🇩🇿 Algérie</td>
+                                <td class="p-3.5 font-mono font-bold text-red-600">16</td>
+                                <td class="p-3.5 font-mono font-bold">17</td>
+                                <td class="p-3.5 font-mono font-bold">14</td>
+                                <td class="p-3.5">1055 (Gendarmerie Nationale)</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3.5 font-bold">🇪🇺 Union Européenne</td>
+                                <td class="p-3.5 font-mono font-bold text-red-600">112</td>
+                                <td class="p-3.5 font-mono font-bold">112</td>
+                                <td class="p-3.5 font-mono font-bold">112</td>
+                                <td class="p-3.5">Gratuit 24/7 depuis tout mobile</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3.5 font-bold">🇺🇸 États-Unis / Canada</td>
+                                <td class="p-3.5 font-mono font-bold text-red-600">911</td>
+                                <td class="p-3.5 font-mono font-bold">911</td>
+                                <td class="p-3.5 font-mono font-bold">911</td>
+                                <td class="p-3.5">Géolocalisation automatique E911</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- FAQ Détaillée -->
+                <div class="grid md:grid-cols-2 gap-6 text-slate-700 dark:text-slate-300">
+                    <div class="p-5 rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 space-y-2">
+                        <h3 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">1. La boussole et le GPS fonctionnent-ils sans forfait internet (hors-ligne) ?</h3>
+                        <p class="text-xs sm:text-sm leading-relaxed">
+                            Oui. La puce GPS de votre téléphone reçoit directement les signaux des satellites en orbite, ce qui ne nécessite aucune connexion Wi-Fi ni données mobiles 4G/5G. De même, le magnétomètre intégré fonctionne de manière autonome pour afficher le Nord magnétique et votre cap en degrés. Seul le chargement de nouvelles tuiles de carte nécessite un accès réseau.
+                        </p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 space-y-2">
+                        <h3 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">2. Quelle est la différence entre le Nord magnétique et le Nord géographique ?</h3>
+                        <p class="text-xs sm:text-sm leading-relaxed">
+                            Le Nord géographique correspond à l'axe de rotation de la Terre, tandis que le Nord magnétique est le point vers lequel s'aligne l'aiguille d'une boussole sous l'effet du champ magnétique terrestre. L'angle entre les deux, appelé déclinaison magnétique, varie selon votre position sur le globe (environ 2° à 4° en Méditerranée).
+                        </p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 space-y-2">
+                        <h3 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">3. Mes coordonnées GPS et mes favoris sont-ils enregistrés sur un serveur ?</h3>
+                        <p class="text-xs sm:text-sm leading-relaxed">
+                            Non. Par respect strict de votre vie privée, toutes vos coordonnées GPS sont calculées localement dans votre navigateur. Vos repères enregistrés dans le Carnet de Voyage sont stockés uniquement dans la mémoire interne de votre appareil (<em>localStorage</em>) et vous pouvez les exporter ou les effacer à tout moment.
+                        </p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 space-y-2">
+                        <h3 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">4. Comment installer Boussole & Goals comme une application mobile (PWA) ?</h3>
+                        <p class="text-xs sm:text-sm leading-relaxed">
+                            Sur Android (Chrome) ou iOS (Safari), ouvrez le menu de votre navigateur et sélectionnez « Ajouter à l'écran d'accueil » ou « Installer l'application ». Une icône dédiée apparaîtra sur votre téléphone pour un lancement instantané en plein écran.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- FOOTER CONFORME ADSENSE (À PROPOS, CONFIDENTIALITÉ, MENTIONS LÉGALES, CONTACT) -->
@@ -505,10 +604,13 @@
                 <div>
                     <h4 class="text-white font-bold uppercase tracking-wider mb-3">Navigation Rapide</h4>
                     <ul class="space-y-2 text-slate-400">
+                        <li><a href="/" class="hover:text-white transition">Portail Principal (Épargne & Finance)</a></li>
                         <li><a href="#boussole-section" class="hover:text-white transition">Boussole Digitale & Coordonnées GPS</a></li>
                         <li><a href="#urgences-section" class="hover:text-white transition">Numéros d'Urgence par Pays</a></li>
                         <li><a href="#carte-section" class="hover:text-white transition">Carte POI & Calcul de Distance</a></li>
                         <li><a href="#guides-section" class="hover:text-white transition">Guides de Sécurité & Séjour</a></li>
+                        <li><a href="#faq-section" class="hover:text-white transition">Référentiel Secours & FAQ</a></li>
+                        <li><a href="/traffic-alerte/" class="hover:text-white transition">Application Trafic Alerte GPS</a></li>
                     </ul>
                 </div>
 
@@ -516,7 +618,8 @@
                     <h4 class="text-white font-bold uppercase tracking-wider mb-3">Informations Légales & Conformité</h4>
                     <ul class="space-y-2 text-slate-400">
                         <li><button onclick="openLegalModal('about')" class="hover:text-white transition underline">À propos de Boussole & Goals</button></li>
-                        <li><button onclick="openLegalModal('privacy')" class="hover:text-white transition underline">Politique de Confidentialité & Cookies (AdSense)</button></li>
+                        <li><a href="/privacy.html" class="hover:text-white transition underline">Politique de Confidentialité (Page Dédiée)</a></li>
+                        <li><button onclick="openLegalModal('privacy')" class="hover:text-white transition underline">Gestion des Cookies (AdSense)</button></li>
                         <li><button onclick="openLegalModal('terms')" class="hover:text-white transition underline">Conditions d'Utilisation & Avertissement</button></li>
                         <li><button onclick="openLegalModal('contact')" class="hover:text-white transition underline">Contact Éditeur</button></li>
                     </ul>
